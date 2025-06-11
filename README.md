@@ -1,8 +1,8 @@
-# OpenAI API client for Kotlin
+# Gateway AI client for Kotlin
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.aallam.openai/openai-client?color=blue&label=Download)](https://central.sonatype.com/namespace/com.aallam.openai)
-[![License](https://img.shields.io/github/license/Aallam/openai-kotlin?color=yellow)](LICENSE.md)
-[![Documentation](https://img.shields.io/badge/docs-api-a97bff.svg?logo=kotlin)](https://mouaad.aallam.com/openai-kotlin/)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.brahyam/openai-client?color=blue&label=Download)](https://central.sonatype.com/namespace/com.aallam.openai)
+[![License](https://img.shields.io/github/license/brahyam/gateway-kmp?color=yellow)](LICENSE.md)
+[![Documentation](https://img.shields.io/badge/docs-api-a97bff.svg?logo=kotlin)](https://docs.meetgateway.com/)
 
 Kotlin client for [OpenAI's API](https://beta.openai.com/docs/api-reference) with multiplatform and coroutines
 capabilities.
@@ -17,61 +17,16 @@ repositories {
 }
 
 dependencies {
-    implementation "com.aallam.openai:openai-client:4.0.1"
+    implementation "io.github.brahyam:openai-client:0.1.0"
 }
 ```
 
 2. Choose and add to your dependencies one of [Ktor's engines](https://ktor.io/docs/http-client-engines.html).
 
-#### BOM
-
-Alternatively, you can use [openai-client-bom](/openai-client-bom)  by adding the following dependency to your `build.gradle` file
-
-```groovy
-dependencies {
-    // import Kotlin API client BOM
-    implementation platform('com.aallam.openai:openai-client-bom:4.0.1')
-
-    // define dependencies without versions
-    implementation 'com.aallam.openai:openai-client'
-    runtimeOnly 'io.ktor:ktor-client-okhttp'
-}
-```
-
 ### Multiplatform
 
 In multiplatform projects, add openai client dependency to `commonMain`, and choose
 an [engine](https://ktor.io/docs/http-client-engines.html) for each target.
-
-### Maven
-
-Gradle is required for multiplatform support, but there's nothing stopping you from using the jvm client in a Maven
-project. You still need to add to your dependencies one
-of [Ktor's engines](https://ktor.io/docs/http-client-engines.html).
-
-<details>
- <summary>Setup the client with maven</summary>
-
-```xml
-<dependencies>
-    <dependency>
-        <groupId>com.aallam.openai</groupId>
-        <artifactId>openai-client-jvm</artifactId>
-        <version>3.8.0</version>
-    </dependency>
-            
-    <dependency>
-        <groupId>io.ktor</groupId>
-        <artifactId>ktor-client-okhttp-jvm</artifactId>
-        <version>2.3.2</version>
-        <scope>runtime</scope>
-    </dependency>
-</dependencies>
-```
-
-</details>
-
-The BOM is not supported for Maven projects.
 
 ## ⚡️ Getting Started
 
@@ -121,13 +76,6 @@ Use your `OpenAI` instance to make API requests. [Learn more](guides/GettingStar
 - [Messages](guides/GettingStarted.md#messages)
 - [Runs](guides/GettingStarted.md#runs)
 
-#### Deprecated
-- [Completions](guides/GettingStarted.md#completions)
-- [Fine-tunes](guides/GettingStarted.md#fine-tunes)
-- [Edits](guides/GettingStarted.md#edits)
-
-*Looking for a tokenizer? Try [ktoken](https://github.com/aallam/ktoken), a Kotlin library for tokenizing text.*
-
 ## 📚 Guides
 
 Get started and understand more about how to use OpenAI API client for Kotlin with these guides:
@@ -147,7 +95,7 @@ The specific rules are [already bundled](openai-core/src/jvmMain/resources/META-
 
 ## 📸 Snapshots
 
-[![Snapshot](https://img.shields.io/badge/dynamic/xml?url=https://oss.sonatype.org/service/local/repositories/snapshots/content/com/aallam/openai/openai-client/maven-metadata.xml&label=snapshot&color=red&query=.//versioning/latest)](https://oss.sonatype.org/content/repositories/snapshots/com/aallam/openai/openai-client/)
+[![Snapshot](https://img.shields.io/badge/dynamic/xml?url=https://oss.sonatype.org/service/local/repositories/snapshots/content/io/github/brahyam/openai-client/maven-metadata.xml&label=snapshot&color=red&query=.//versioning/latest)](https://oss.sonatype.org/content/repositories/snapshots/io/github/brahyam/openai-client/)
 
 <details>
  <summary>Learn how to import snapshot version</summary>
@@ -177,5 +125,11 @@ Appreciate the project? Here's how you can help:
 
 ## 📄 License
 
-OpenAI Kotlin API Client is an open-sourced software licensed under the [MIT license](LICENSE.md).
-**This is an unofficial library, it is not affiliated with nor endorsed by OpenAI**. Contributions are welcome.
+Gateway AI Kotlin Client is an open-sourced software licensed under the [MIT license](LICENSE.md).
+**This is an unofficial library, it is not affiliated with nor endorsed by Open AI**. Contributions
+are welcome.
+
+## 📝 Acknowledgments
+
+This project starts as a fork of [OpenAI Kotlin Client](https://github.com/aallam/openai-kotlin) and
+the great work of all its contributors. Thank you.
