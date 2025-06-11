@@ -14,10 +14,28 @@ plugins {
     alias(libs.plugins.maven.publish) apply false
     alias(libs.plugins.spotless) apply false
     alias(libs.plugins.dokka)
+    `maven-publish`
 }
 
 subprojects {
     apply(plugin = "com.diffplug.spotless")
+    apply(plugin = "com.vanniktech.maven.publish")
+    apply(plugin = "maven-publish")
+
+    publishing {
+        repositories {
+            maven {
+                name = "githubPackages"
+                url = uri("https://maven.pkg.github.com/brahyam/gateway-kmp")
+                // username and password (a personal Github access token) should be specified as
+                // `githubPackagesUsername` and `githubPackagesPassword` Gradle properties or alternatively
+                // as `ORG_GRADLE_PROJECT_githubPackagesUsername` and `ORG_GRADLE_PROJECT_githubPackagesPassword`
+                // environment variables
+                credentials(PasswordCredentials::class)
+            }
+        }
+    }
+
     configure<SpotlessExtension> {
         kotlin {
             target("**/*.kt")
