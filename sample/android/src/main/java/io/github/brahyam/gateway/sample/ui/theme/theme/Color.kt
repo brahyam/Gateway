@@ -1,4 +1,4 @@
-package io.github.brahyam.gateway.sample.ui.theme
+package io.github.brahyam.gateway.sample.ui.theme.theme
 
 import androidx.compose.ui.graphics.Color
 

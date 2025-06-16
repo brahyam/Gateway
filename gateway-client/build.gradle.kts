@@ -55,7 +55,7 @@ kotlin {
         }
         val commonMain by getting {
             dependencies {
-                implementation(projects.openaiClient)
+                api(projects.openaiClient)
                 api(projects.openaiCore)
                 api(libs.coroutines.core)
                 api(libs.kotlinx.io.core)

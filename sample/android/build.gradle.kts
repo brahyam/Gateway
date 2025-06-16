@@ -40,8 +40,11 @@ android {
 }
 
 dependencies {
-    // Importing the gateway client library locally
+    // Gateway Client
     implementation(projects.gatewayClient)
+    // Gateway ktor client
+    implementation(libs.ktor.client.okhttp)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
