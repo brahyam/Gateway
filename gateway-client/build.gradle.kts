@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.konan.target.HostManager
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
+    id("com.android.library")
     id("com.vanniktech.maven.publish")
     id("binary-compatibility-validator")
     id("com.diffplug.spotless")
@@ -10,12 +11,36 @@ plugins {
     id("build-support")
 }
 
+android {
+    compileSdk = 35
+    namespace = "io.github.brahyam.gateway.client"
+    defaultConfig {
+        minSdk = 24
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+}
+
 kotlin {
     explicitApi()
+    jvmToolchain(11)
     jvm()
     jsNode()
     jsWasm()
     native()
+    androidTarget()
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach {
+        it.binaries.framework {
+            baseName = "Gateway"
+            isStatic = true
+        }
+    }
 
     sourceSets {
         all {
@@ -30,6 +55,7 @@ kotlin {
         }
         val commonMain by getting {
             dependencies {
+                implementation(projects.openaiClient)
                 api(projects.openaiCore)
                 api(libs.coroutines.core)
                 api(libs.kotlinx.io.core)
@@ -49,6 +75,12 @@ kotlin {
                 implementation(kotlin("test-annotations-common"))
                 implementation(libs.coroutines.test)
             }
+        }
+        androidMain.dependencies {
+
+        }
+        iosMain.dependencies {
+
         }
         val jvmMain by getting
         val jvmTest by getting {

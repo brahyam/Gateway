@@ -5,6 +5,14 @@ serialization = "1.7.3"
 ktor = "3.0.0"
 kotlinio = "0.5.4"
 logback = "1.4.8"
+playIntegrity = "1.4.0"
+agp = "8.10.1"
+junit = "4.13.2"
+espressoCore = "3.0.2"
+coreKtx = "1.16.0"
+lifecycleRuntimeKtx = "2.9.1"
+activityCompose = "1.10.1"
+composeBom = "2024.09.00"
 
 [libraries]
 # Coroutines
@@ -25,7 +33,6 @@ ktor-client-apache = { group = "io.ktor", name = "ktor-client-apache", version.r
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 ktor-client-java = { group = "io.ktor", name = "ktor-client-java", version.ref = "ktor" }
 ktor-client-jetty = { group = "io.ktor", name = "ktor-client-jetty", version.ref = "ktor" }
-ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref = "ktor" }
 ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-darwin = { group = "io.ktor", name = "ktor-client-darwin", version.ref = "ktor" }
 # IO
@@ -33,9 +40,25 @@ kotlinx-io-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-io-core", v
 kotlinx-io-bytestring = { group = "org.jetbrains.kotlinx", name = "kotlinx-io-bytestring", version.ref = "kotlinio" }
 # Logback
 logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
-# ulid
-ulid = { group = "com.aallam.ulid", name = "ulid-kotlin", version = "1.2.1" }
 ktoken = { group = "com.aallam.ktoken", name = "ktoken", version = "0.3.0" }
+# attestation
+play-integrity = { group = "com.google.android.play", name = "integrity", version.ref = "playIntegrity" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+
+# android sample
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junit" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 
 [plugins]
 kotlin-multiplaform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -44,3 +67,7 @@ kotlinx-binary-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-va
 maven-publish = { id = "com.vanniktech.maven.publish", version = "0.32.0" }
 spotless = { id = "com.diffplug.gradle.spotless", version = "6.25.0" }
 dokka = { id = "org.jetbrains.dokka", version = "1.9.20" }
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

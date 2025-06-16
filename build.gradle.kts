@@ -1,6 +1,9 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent.*
+import org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED
+import org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED
+import org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED
+import org.gradle.api.tasks.testing.logging.TestLogEvent.STARTED
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
@@ -14,6 +17,10 @@ plugins {
     alias(libs.plugins.maven.publish) apply false
     alias(libs.plugins.spotless) apply false
     alias(libs.plugins.dokka)
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.compose) apply false
     `maven-publish`
 }
 
@@ -66,6 +73,6 @@ subprojects {
     }
 }
 
-tasks.withType<DokkaMultiModuleTask>() {
+tasks.withType<DokkaMultiModuleTask> {
     outputDirectory.set(projectDir.resolve("docs"))
 }
