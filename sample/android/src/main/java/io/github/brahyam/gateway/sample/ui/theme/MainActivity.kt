@@ -42,6 +42,7 @@ import com.aallam.openai.api.core.Role.Companion.User
 import com.aallam.openai.api.model.ModelId
 import io.github.brahyam.gateway.client.Gateway
 import io.github.brahyam.gateway.client.OpenAIService
+import io.github.brahyam.gateway.sample.BuildConfig
 import io.github.brahyam.gateway.sample.ui.theme.theme.SampleTheme
 import kotlinx.coroutines.launch
 
@@ -56,8 +57,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize OpenAI service with your API key
-        openAIService = Gateway.unprotectedOpenAIService("YOUR_OPENAI_API_KEY")
+        // Initialize OpenAI service with API key from BuildConfig
+        openAIService = Gateway.unprotectedOpenAIService(BuildConfig.OPENAI_API_KEY)
 
         enableEdgeToEdge()
         setContent {
@@ -179,6 +180,6 @@ fun MessageBubble(message: Message) {
 @Composable
 fun ChatScreenPreview() {
     SampleTheme {
-        ChatScreen(Gateway.unprotectedOpenAIService("YOUR_OPENAI_API_KEY"))
+        ChatScreen(Gateway.unprotectedOpenAIService(12345.toLong().toString()))
     }
 }

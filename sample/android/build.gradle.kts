@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,16 +9,27 @@ plugins {
 
 android {
     namespace = "io.github.brahyam.gateway.sample"
-    compileSdk = 35
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
+        val prop = Properties().apply {
+            load(FileInputStream(File(rootProject.rootDir, "local.properties")))
+        }
         applicationId = "io.github.brahyam.gateway.sample"
-        minSdk = 24
-        targetSdk = 35
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Add your Google Cloud Project Number and OpenAI API Key to local.properties file
+        buildConfigField(
+            "String",
+            "GOOGLE_CLOUD_PROJECT_NUMBER",
+            "\"${prop.getProperty("GOOGLE_CLOUD_PROJECT_NUMBER")}\""
+        )
+        buildConfigField("String", "OPENAI_API_KEY", "\"${prop.getProperty("OPENAI_API_KEY")}\"")
     }
 
     buildTypes {
@@ -36,6 +50,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

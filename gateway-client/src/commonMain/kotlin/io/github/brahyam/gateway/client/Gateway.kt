@@ -1,7 +1,9 @@
 package io.github.brahyam.gateway.client
 
-import com.aallam.openai.api.logging.LogLevel
 import io.ktor.client.HttpClientConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Gateway client for secure access AI services.
@@ -12,12 +14,18 @@ public object Gateway {
 
     /**
      * Configure the Gateway client. This must be called before using any other Gateway functionality.
+     * On Android, this will also prepare the Play Integrity token provider.
      *
      * @param config The configuration for the Gateway client.
      */
     public fun configure(config: GatewayConfig) {
         this.config = config
-        this.instance = GatewayImpl(config)
+        this.instance = createGatewayImpl(config)
+
+        // Prepare integrity token provider on Android
+        CoroutineScope(Dispatchers.Default).launch {
+            instance?.warmUpAttestation()
+        }
     }
 
     /**
@@ -58,5 +66,5 @@ public object Gateway {
  * Configuration for the Gateway client.
  */
 public data class GatewayConfig(
-    val logLevel: LogLevel = LogLevel.Info,
+    val googleCloudProjectNumber: Long,
 )

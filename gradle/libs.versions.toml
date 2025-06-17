@@ -1,4 +1,7 @@
 [versions]
+android-minSdk = "24"
+android-compileSdk = "35"
+android-targetSdk = "35"
 kotlin = "2.0.20"
 coroutines = "1.8.1"
 serialization = "1.7.3"

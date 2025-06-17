@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.konan.target.HostManager
-
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
@@ -12,10 +10,10 @@ plugins {
 }
 
 android {
-    compileSdk = 35
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     namespace = "io.github.brahyam.gateway.client"
     defaultConfig {
-        minSdk = 24
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -26,10 +24,6 @@ android {
 kotlin {
     explicitApi()
     jvmToolchain(11)
-    jvm()
-    jsNode()
-    jsWasm()
-    native()
     androidTarget()
     listOf(
         iosX64(),
@@ -77,49 +71,10 @@ kotlin {
             }
         }
         androidMain.dependencies {
-
+            implementation(libs.play.integrity)
         }
         iosMain.dependencies {
 
-        }
-        val jvmMain by getting
-        val jvmTest by getting {
-            dependencies {
-                implementation(kotlin("test-junit"))
-                implementation(libs.ktor.client.okhttp)
-                implementation(libs.logback.classic)
-            }
-        }
-
-        val jsMain by getting {
-            dependencies {
-            }
-        }
-        val jsTest by getting {
-            dependencies {
-                implementation(kotlin("test-js"))
-            }
-        }
-        val wasmJsMain by getting {
-            dependencies {
-            }
-        }
-        val wasmJsTest by getting {
-            dependencies {
-                implementation(kotlin("test-wasm-js"))
-            }
-        }
-        val desktopTest by getting {
-            dependencies {
-                implementation(libs.ktor.client.curl)
-            }
-        }
-        if (HostManager.hostIsMac) {
-            val darwinTest by getting {
-                dependencies {
-                    implementation(libs.ktor.client.darwin)
-                }
-            }
         }
     }
 }
