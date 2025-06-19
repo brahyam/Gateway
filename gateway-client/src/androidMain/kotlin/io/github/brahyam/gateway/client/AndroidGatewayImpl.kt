@@ -57,12 +57,12 @@ internal class AndroidGatewayImpl(
     override suspend fun getIntegrityToken(): String {
         val tokenProvider = integrityTokenProvider
             ?: throw IllegalStateException("Integrity Token Provider not initialized. Call warmUpAttestation() first.")
-
+        println("Requesting Integrity Token...")
         return withContext(Dispatchers.IO) {
             suspendCancellableCoroutine { continuation ->
                 tokenProvider.request(StandardIntegrityTokenRequest.builder().build())
                     .addOnSuccessListener { response ->
-                        println("Successfully requested Integrity Token. Token: ${response.token()}")
+                        println("Successfully requested Integrity Token.")
                         continuation.resume(response.token())
                     }
                     .addOnFailureListener { exception ->

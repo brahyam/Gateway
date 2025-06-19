@@ -6,7 +6,6 @@ import com.aallam.openai.client.OpenAIHost
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.plugin
-import kotlinx.coroutines.runBlocking
 
 /**
  * Interface for OpenAI service implementations.
@@ -38,11 +37,9 @@ internal class ProtectedOpenAIService(
     ),
     httpClientApplicator = {
         plugin(HttpSend).intercept { request ->
-            runBlocking {
-                val integrityToken = gatewayImpl.getIntegrityToken()
-                request.headers.append("gateway-integrity", integrityToken)
-                execute(request)
-            }
+            val integrityToken = gatewayImpl.getIntegrityToken()
+            request.headers.append("gateway-integrity", integrityToken)
+            execute(request)
         }
     }
 )
