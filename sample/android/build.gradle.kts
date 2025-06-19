@@ -30,6 +30,16 @@ android {
             "\"${prop.getProperty("GOOGLE_CLOUD_PROJECT_NUMBER")}\""
         )
         buildConfigField("String", "OPENAI_API_KEY", "\"${prop.getProperty("OPENAI_API_KEY")}\"")
+        buildConfigField(
+            "String",
+            "GATEWAY_PARTIAL_KEY",
+            "\"${prop.getProperty("GATEWAY_PARTIAL_KEY")}\""
+        )
+        buildConfigField(
+            "String",
+            "GATEWAY_SERVICE_URL",
+            "\"${prop.getProperty("GATEWAY_SERVICE_URL")}\""
+        )
     }
 
     buildTypes {

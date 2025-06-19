@@ -4,13 +4,15 @@ import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.client.internal.OpenAIApi
 import com.aallam.openai.client.internal.createHttpClient
 import com.aallam.openai.client.internal.http.HttpTransport
-import io.ktor.client.*
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import kotlin.time.Duration.Companion.seconds
 
 /**
  * OpenAI API.
  */
-public interface OpenAI : Completions, Files, Edits, Embeddings, Models, Moderations, FineTunes, Images, Chat, Audio,
+public interface OpenAI : Completions, Files, Edits, Embeddings, Models, Moderations, FineTunes,
+    Images, Chat, Audio,
     FineTuning, Assistants, Threads, Runs, Messages, VectorStores, Batch, AutoCloseable
 
 /**
@@ -36,7 +38,7 @@ public fun OpenAI(
     host: OpenAIHost = OpenAIHost.OpenAI,
     proxy: ProxyConfig? = null,
     retry: RetryStrategy = RetryStrategy(),
-    httpClientConfig: HttpClientConfig<*>.() -> Unit = {}
+    httpClientConfig: HttpClientConfig<*>.() -> Unit = {},
 ): OpenAI = OpenAI(
     config = OpenAIConfig(
         token = token,
@@ -58,6 +60,19 @@ public fun OpenAI(
  */
 public fun OpenAI(config: OpenAIConfig): OpenAI {
     val httpClient = createHttpClient(config)
+    val transport = HttpTransport(httpClient)
+    return OpenAIApi(transport)
+}
+
+/**
+ * Creates an instance of [OpenAI] with a custom HTTP client plugin.
+ */
+public fun OpenAI(
+    config: OpenAIConfig,
+    httpClientApplicator: HttpClient.() -> Unit = {},
+): OpenAI {
+    val httpClient = createHttpClient(config)
+    httpClient.httpClientApplicator()
     val transport = HttpTransport(httpClient)
     return OpenAIApi(transport)
 }

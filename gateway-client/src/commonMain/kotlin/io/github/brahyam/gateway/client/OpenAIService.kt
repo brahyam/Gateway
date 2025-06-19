@@ -1,8 +1,12 @@
 package io.github.brahyam.gateway.client
 
 import com.aallam.openai.client.OpenAI
+import com.aallam.openai.client.OpenAIConfig
 import com.aallam.openai.client.OpenAIHost
 import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.HttpSend
+import io.ktor.client.plugins.plugin
+import kotlinx.coroutines.runBlocking
 
 /**
  * Interface for OpenAI service implementations.
@@ -26,7 +30,19 @@ internal class UnprotectedOpenAIService(
 internal class ProtectedOpenAIService(
     private val partialKey: String,
     private val serviceURL: String,
+    private val gatewayImpl: GatewayImpl,
 ) : OpenAIService, OpenAI by OpenAI(
-    token = partialKey,
-    host = OpenAIHost(serviceURL)
+    config = OpenAIConfig(
+        token = partialKey,
+        host = OpenAIHost(serviceURL),
+    ),
+    httpClientApplicator = {
+        plugin(HttpSend).intercept { request ->
+            runBlocking {
+                val integrityToken = gatewayImpl.getIntegrityToken()
+                request.headers.append("gateway-integrity", integrityToken)
+                execute(request)
+            }
+        }
+    }
 )

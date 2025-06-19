@@ -6,8 +6,12 @@ import android.content.Context
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.StandardIntegrityManager.PrepareIntegrityTokenRequest
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityTokenProvider
+import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityTokenRequest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 @SuppressLint("PrivateApi")
 internal actual fun createGatewayImpl(config: GatewayConfig): GatewayImpl {
@@ -32,15 +36,41 @@ internal class AndroidGatewayImpl(
                 .setCloudProjectNumber(config.googleCloudProjectNumber)
                 .build()
 
-            integrityManager.prepareIntegrityToken(request).addOnSuccessListener {
-                integrityTokenProvider = it
-            }.addOnFailureListener { exception ->
-                throw RuntimeException("Failed to prepare Integrity Token Provider", exception)
+            integrityTokenProvider = suspendCancellableCoroutine { continuation ->
+                integrityManager.prepareIntegrityToken(request)
+                    .addOnSuccessListener { provider ->
+                        println("Prepared Integrity Token Provider successfully.")
+                        continuation.resume(provider)
+                    }
+                    .addOnFailureListener { exception ->
+                        continuation.resumeWithException(
+                            RuntimeException(
+                                "Failed to prepare Integrity Token Provider",
+                                exception
+                            )
+                        )
+                    }
             }
         }
     }
 
-    fun getIntegrityTokenProvider(): StandardIntegrityTokenProvider? {
-        return integrityTokenProvider
+    override suspend fun getIntegrityToken(): String {
+        val tokenProvider = integrityTokenProvider
+            ?: throw IllegalStateException("Integrity Token Provider not initialized. Call warmUpAttestation() first.")
+
+        return withContext(Dispatchers.IO) {
+            suspendCancellableCoroutine { continuation ->
+                tokenProvider.request(StandardIntegrityTokenRequest.builder().build())
+                    .addOnSuccessListener { response ->
+                        println("Successfully requested Integrity Token. Token: ${response.token()}")
+                        continuation.resume(response.token())
+                    }
+                    .addOnFailureListener { exception ->
+                        continuation.resumeWithException(
+                            RuntimeException("Failed to request Integrity Token", exception)
+                        )
+                    }
+            }
+        }
     }
 } 

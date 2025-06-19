@@ -46,13 +46,13 @@ public object Gateway {
      * Get a protected OpenAI service instance for production use cases.
      * This uses the Gateway's attestation and protection mechanisms.
      *
-     * @param partialKey Partial key from your developer dashboard
-     * @param serviceURL Service URL from your developer dashboard
+     * @param partialKey Partial key from your Gateway developer dashboard
+     * @param serviceURL Service URL from your Gateway developer dashboard
      * @return A protected OpenAI service instance
      */
     public fun protectedOpenAIService(partialKey: String, serviceURL: String): OpenAIService {
         checkConfigured()
-        return ProtectedOpenAIService(partialKey, serviceURL)
+        return ProtectedOpenAIService(partialKey, serviceURL, instance!!)
     }
 
     private fun checkConfigured() {

@@ -57,8 +57,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize OpenAI service with API key from BuildConfig
-        openAIService = Gateway.unprotectedOpenAIService(BuildConfig.OPENAI_API_KEY)
+        // Use this for BYOK (Bring Your Own Key) use cases
+        //openAIService = Gateway.unprotectedOpenAIService(BuildConfig.OPENAI_API_KEY)
+
+        // Use this for production use cases with Gateway protection
+        openAIService = Gateway.protectedOpenAIService(
+            BuildConfig.GATEWAY_PARTIAL_KEY,
+            BuildConfig.GATEWAY_SERVICE_URL
+        )
 
         enableEdgeToEdge()
         setContent {

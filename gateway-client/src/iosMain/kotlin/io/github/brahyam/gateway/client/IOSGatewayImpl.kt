@@ -8,6 +8,10 @@ internal class IOSGatewayImpl(
     private val config: GatewayConfig,
 ) : GatewayImpl {
     override suspend fun warmUpAttestation() {
-        // No-op for non-Android platforms
+        // Placeholder for iOS-specific implementation
+    }
+
+    override suspend fun getIntegrityToken(): String {
+        return "" // Placeholder for iOS-specific implementation
     }
 }
