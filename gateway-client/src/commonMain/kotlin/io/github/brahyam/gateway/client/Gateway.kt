@@ -6,7 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * Gateway client for secure access AI services.
+ * Gateway client for access AI services.
  */
 public object Gateway {
     private var config: GatewayConfig? = null
@@ -14,7 +14,6 @@ public object Gateway {
 
     /**
      * Configure the Gateway client. This must be called before using any other Gateway functionality.
-     * On Android, this will also prepare the Play Integrity token provider.
      *
      * @param config The configuration for the Gateway client.
      */
@@ -22,7 +21,6 @@ public object Gateway {
         this.config = config
         this.instance = createGatewayImpl(config)
 
-        // Prepare integrity token provider on Android
         CoroutineScope(Dispatchers.Default).launch {
             instance?.warmUpAttestation()
         }

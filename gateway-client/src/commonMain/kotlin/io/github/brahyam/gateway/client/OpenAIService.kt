@@ -34,6 +34,7 @@ internal class ProtectedOpenAIService(
     config = OpenAIConfig(
         token = partialKey,
         host = OpenAIHost(serviceURL),
+        engine = createPinnedEngine()
     ),
     httpClientApplicator = {
         plugin(HttpSend).intercept { request ->

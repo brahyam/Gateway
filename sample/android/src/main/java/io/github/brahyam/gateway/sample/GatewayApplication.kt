@@ -7,6 +7,6 @@ import io.github.brahyam.gateway.client.GatewayConfig
 class GatewayApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        Gateway.configure(GatewayConfig(googleCloudProjectNumber = BuildConfig.GOOGLE_CLOUD_PROJECT_NUMBER.toLong()))
+        Gateway.configure(GatewayConfig(BuildConfig.GOOGLE_CLOUD_PROJECT_NUMBER.toLong()))
     }
 } 

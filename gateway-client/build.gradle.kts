@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
@@ -7,6 +10,22 @@ plugins {
     id("com.diffplug.spotless")
     id("org.jetbrains.dokka")
     id("build-support")
+    id("com.github.gmazzo.buildconfig")
+}
+
+buildConfig {
+    val localProperties = Properties().apply {
+        load(FileInputStream(File(rootProject.rootDir, "local.properties")))
+    }
+    buildConfigField("GATEWAY_HOST", localProperties.getProperty("GATEWAY_HOST"))
+    buildConfigField(
+        "GATEWAY_PINS",
+        arrayOf(
+            localProperties.getProperty("GATEWAY_PIN_1"),
+            localProperties.getProperty("GATEWAY_PIN_2"),
+            localProperties.getProperty("GATEWAY_PIN_3")
+        )
+    )
 }
 
 android {
@@ -72,9 +91,10 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.play.integrity)
+            implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {
-
+            implementation(libs.ktor.client.darwin)
         }
     }
 }
