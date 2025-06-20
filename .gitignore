@@ -24,3 +24,10 @@ coverage-error.log
 kotlin-js-store
 
 .kotlin
+
+# Swift Package Manager
+# Keep Package.swift but ignore build artifacts
+*.xcodeproj/
+*.xcworkspace/
+.build/
+DerivedData/
