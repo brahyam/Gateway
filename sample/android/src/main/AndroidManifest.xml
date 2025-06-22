@@ -16,7 +16,7 @@
         android:theme="@style/Theme.Sample"
         tools:targetApi="31">
         <activity
-            android:name=".ui.theme.MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Sample">
             <intent-filter>

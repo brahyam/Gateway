@@ -25,9 +25,9 @@ android {
 
         // Add your Google Cloud Project Number and OpenAI API Key to local.properties file
         buildConfigField(
-            "String",
+            "Long",
             "GOOGLE_CLOUD_PROJECT_NUMBER",
-            "\"${prop.getProperty("GOOGLE_CLOUD_PROJECT_NUMBER")}\""
+            prop.getProperty("GOOGLE_CLOUD_PROJECT_NUMBER")
         )
         buildConfigField("String", "OPENAI_API_KEY", "\"${prop.getProperty("OPENAI_API_KEY")}\"")
         buildConfigField(

@@ -1,15 +1,16 @@
-# Gateway AI client for Kotlin
+# Gateway AI Client
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.brahyam/openai-client?color=blue&label=Download)](https://central.sonatype.com/namespace/com.aallam.openai)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.brahyam/gateway-client?color=blue&label=Download)](https://central.sonatype.com/namespace/com.aallam.openai)
 [![License](https://img.shields.io/github/license/brahyam/gateway-kmp?color=yellow)](LICENSE.md)
 [![Documentation](https://img.shields.io/badge/docs-api-a97bff.svg?logo=kotlin)](https://docs.meetgateway.com/)
 
-Kotlin client for [OpenAI's API](https://beta.openai.com/docs/api-reference) with multiplatform and coroutines
-capabilities.
+Android and iOS client for [Gateway secure AI API](https://docs.meetgateway.com/)
 
-## 📦 Setup
+[Jump to the iOS setup](#-ios--swift-package-manager-setup)
 
-1. Install OpenAI API Kotlin client by adding the following dependency to your `build.gradle` file:
+## 📦 Android / KMP Setup
+
+1. Install Gateway AI Client by adding the following dependency to your `build.gradle` file:
 
 ```groovy
 repositories {
@@ -17,46 +18,132 @@ repositories {
 }
 
 dependencies {
-    implementation "io.github.brahyam:openai-client:0.1.0"
+   implementation "io.github.brahyam:gateway-client:0.1.0"
 }
 ```
 
-2. Choose and add to your dependencies one of [Ktor's engines](https://ktor.io/docs/http-client-engines.html).
-
-### Multiplatform
-
-In multiplatform projects, add openai client dependency to `commonMain`, and choose
-an [engine](https://ktor.io/docs/http-client-engines.html) for each target.
-
-## ⚡️ Getting Started
-
-> [!NOTE]
-> OpenAI encourages using environment variables for the API key.
-> [Read more](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety).
-
-Create an instance of `OpenAI` client:
+2. Configure the client early in your application startup:
 
 ```kotlin
-val openai = OpenAI(
-    token = "your-api-key",
-    timeout = Timeout(socket = 60.seconds),
-    // additional configurations...
+import android.app.Application
+import io.github.brahyam.gateway.client.Gateway
+import io.github.brahyam.gateway.client.GatewayConfig
+
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        val config = GatewayConfig(googleCloudProjectNumber = 1234567890) // your Google Cloud project number
+        Gateway.configure(config)
+    }
+} 
+```
+
+3. Create an instance of a service eg. OpenAI service:
+
+For development use the unprotected service (requests go straight to the OpenAI API):
+
+```kotlin
+val openAiService = Gateway.unprotectedOpenAIService(
+    apiKey = "your-openai-api-key", // get it from OpenAI dashboard
 )
 ```
 
-Or you can create an instance of `OpenAI` using a pre-configured `OpenAIConfig`:
+For production use the protected service (requests go through the Gateway and are protected with
+device attestation, certificate pinning, api key protection, ip rate limiting):
 
 ```kotlin
-val config = OpenAIConfig(
-    token = apiKey,
-    timeout = Timeout(socket = 60.seconds),
-    // additional configurations...
+val openAiService = Gateway.protectedOpenAIService(
+    partialKey = "your-partial-key", // get it from Gateway dashboard
+    serviceUrl = "your service url" // get it from Gateway dashboard
 )
-
-val openAI = OpenAI(config)
 ```
 
-Use your `OpenAI` instance to make API requests. [Learn more](guides/GettingStarted.md).
+4. Use your `openAiService` to make API requests. [Learn more](guides/GettingStarted.md).
+
+```kotlin
+// suspending function
+val response = openAiService.chatCompletion(
+    request = ChatCompletionRequest(
+        model = ModelId("gpt-4o-mini"),
+        messages = listOf(ChatMessage(role = Role.User, content = "Hello, how are you?"))
+    )
+)
+println(response.choices[0].message.content)
+```
+
+## 📦 iOS / Swift Package Manager Setup
+
+1. Install Gateway AI Client by adding the following dependency to your `Package.swift` file:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/brahyam/gateway-kmp.git", from: "0.1.0")
+]
+```
+
+2. Configure the client early in your application startup (in AppDelegate or SceneDelegate):
+
+```swift
+import Gateway
+
+@main
+struct MyApp: App {
+    init() {
+        Gateway.configure()
+    }
+}
+```
+
+or
+
+```swift
+import Gateway
+
+@UIApplicationMain
+class AppDelegate: UIResponder, UIApplicationDelegate {
+
+    var window: UIWindow?
+
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        Gateway.configure()
+        return true
+    }
+}
+```
+
+3. Create an instance of a service eg. OpenAI service:
+
+For development use the unprotected service (requests go straight to the OpenAI API):
+
+```swift
+import Gateway
+
+let openAiService = Gateway.unprotectedOpenAIService(
+    apiKey = "your-openai-api-key", // get it from OpenAI dashboard
+)
+
+For production use the protected service (requests go through the Gateway and are protected with device attestation, certificate pinning, api key protection, ip rate limiting):
+
+```swift
+let openAiService = Gateway.protectedOpenAIService(
+    partialKey = "your-partial-key", // get it from Gateway dashboard
+    serviceUrl = "your service url" // get it from Gateway dashboard
+)
+```
+
+4. Use your `openAiService` to make API requests. [Learn more](guides/GettingStarted.md).
+
+```swift
+// async function
+let response = openAiService.chatCompletion(
+    request = ChatCompletionRequest(
+        model = ModelId("gpt-4o-mini"),
+        messages = listOf(ChatMessage(role = Role.User, content = "Hello, how are you?"))
+    )
+)
+print(response.choices[0].message.content)
+```
 
 ### Supported features
 
@@ -125,7 +212,7 @@ Appreciate the project? Here's how you can help:
 
 ## 📄 License
 
-Gateway AI Kotlin Client is an open-sourced software licensed under the [MIT license](LICENSE.md).
+Gateway AI Client is an open-sourced software licensed under the [MIT license](LICENSE.md).
 **This is an unofficial library, it is not affiliated with nor endorsed by Open AI**. Contributions
 are welcome.
 
@@ -133,3 +220,112 @@ are welcome.
 
 This project starts as a fork of [OpenAI Kotlin Client](https://github.com/aallam/openai-kotlin) and
 the great work of all its contributors. Thank you.
+
+### iOS (Swift Package Manager)
+
+Add the Gateway package to your iOS project:
+
+```swift
+// In Xcode: File → Add Package Dependencies
+// URL: https://github.com/brahyam/gateway-kmp.git
+
+import Gateway
+
+// Use the Gateway library
+let gateway = Gateway()
+```
+
+The Swift Package is hosted directly in the root directory of this repository, making it easy to
+integrate.
+
+### Android
+
+Add the dependency to your `build.gradle.kts`:
+
+```kotlin
+dependencies {
+   implementation("io.github.brahyam:gateway-client:0.1.0")
+}
+```
+
+### JVM
+
+Add the dependency to your `build.gradle.kts`:
+
+```kotlin
+dependencies {
+   implementation("io.github.brahyam:gateway-client:0.1.0")
+}
+```
+
+## Building
+
+### Prerequisites
+
+- JDK 11+
+- Gradle 8.0+
+- Xcode 12.0+ (for iOS builds)
+- Android SDK (for Android builds)
+
+### Build Commands
+
+```bash
+# Build all platforms
+./gradlew build
+
+# Build XCFramework for iOS
+./gradlew :gateway-client:assembleGatewayXCFramework
+
+# Build and setup Swift Package Manager (recommended)
+./scripts/build-swift-package.sh
+```
+
+## Publishing
+
+### Automated Release
+
+1. Update version in `gradle.properties`
+2. Create and push a tag:
+   ```bash
+   git tag v0.1.1
+   git push origin v0.1.1
+   ```
+3. GitHub Actions will automatically:
+   - Build the XCFramework
+   - Create a GitHub release
+   - Update Package.swift in root directory
+
+### Manual Setup
+
+```bash
+# Build and setup Swift Package Manager
+./scripts/build-swift-package.sh
+```
+
+## Documentation
+
+- [API Documentation](docs/)
+- [Sample Projects](sample/)
+
+## Repository Structure
+
+```
+gateway-kmp/
+├── Package.swift              # Swift Package manifest (root directory)
+├── gateway-client/            # Main Kotlin Multiplatform module
+├── .github/workflows/         # Automated release workflows
+├── scripts/                   # Build and setup scripts
+└── docs/                      # Documentation
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

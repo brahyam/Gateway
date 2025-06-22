@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -44,13 +45,21 @@ kotlin {
     explicitApi()
     jvmToolchain(11)
     androidTarget()
+
+    // XCFramework configuration for Swift Package Manager
+    val xcframeworkName = "Gateway"
+    val xcf = XCFramework(xcframeworkName)
+    
     listOf(
         iosX64(),
         iosArm64(),
         iosSimulatorArm64()
     ).forEach {
         it.binaries.framework {
-            baseName = "Gateway"
+            baseName = xcframeworkName
+            // Specify CFBundleIdentifier to uniquely identify the framework
+            binaryOption("bundleId", "io.github.brahyam.gateway.${xcframeworkName}")
+            xcf.add(this)
             isStatic = true
         }
     }
