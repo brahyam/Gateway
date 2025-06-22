@@ -22,6 +22,7 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.buildconfig) apply false
+    alias(libs.plugins.skie) apply false
     `maven-publish`
 }
 

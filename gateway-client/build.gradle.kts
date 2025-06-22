@@ -1,3 +1,4 @@
+import co.touchlab.skie.configuration.DefaultArgumentInterop
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 import java.io.FileInputStream
 import java.util.Properties
@@ -12,6 +13,7 @@ plugins {
     id("org.jetbrains.dokka")
     id("build-support")
     id("com.github.gmazzo.buildconfig")
+    id("co.touchlab.skie")
 }
 
 buildConfig {
@@ -88,6 +90,7 @@ kotlin {
                 implementation(libs.ktor.client.auth)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.client.serialization.json)
+                implementation(libs.skie.annotations)
             }
         }
         val commonTest by getting {
@@ -104,6 +107,14 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+        }
+    }
+}
+
+skie {
+    features {
+        group {
+            DefaultArgumentInterop.Enabled(true)
         }
     }
 }

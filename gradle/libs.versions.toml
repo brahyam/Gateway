@@ -17,6 +17,7 @@ lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
 composeBom = "2024.09.00"
 buildConfig = "5.6.6"
+skie = "0.10.2"
 
 [libraries]
 # Coroutines
@@ -48,6 +49,8 @@ ktoken = { group = "com.aallam.ktoken", name = "ktoken", version = "0.3.0" }
 # attestation
 play-integrity = { group = "com.google.android.play", name = "integrity", version.ref = "playIntegrity" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+# Interop
+skie-annotations = { group = "co.touchlab.skie", name = "configuration-annotations", version.ref = "skie" }
 
 # android sample
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -76,3 +79,4 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildConfig" }
+skie = { id = "co.touchlab.skie", version.ref = "skie" }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Gateway
+import Foundation
 
 struct Message: Identifiable {
     let id = UUID()
@@ -18,6 +19,18 @@ struct ContentView: View {
     @State private var messages: [Message] = []
     @State private var inputText: String = ""
     @State private var isLoading: Bool = false
+    
+    // Gateway OpenAI service instance
+    private let openAIService: OpenAIService = Gateway.shared.protectedOpenAIService(partialKey: <#T##String#>, serviceURL: <#T##String#>, logging: <#T##Openai_clientLoggingConfig#>, timeout: <#T##Openai_coreTimeout#>, organization: <#T##String?#>, headers: <#T##[String : String]#>, proxy: <#T##(any Openai_clientProxyConfig)?#>, retry: <#T##Openai_clientRetryStrategy#>) {
+        // Replace these with your actual Gateway credentials
+        let partialKey = "your-partial-key-here"
+        let serviceURL = "https://your-gateway-service-url.com"
+        
+        return Gateway.protectedOpenAIService(
+            partialKey: partialKey,
+            serviceURL: serviceURL
+        )
+    }()
     
     var body: some View {
         VStack {
@@ -70,12 +83,53 @@ struct ContentView: View {
         inputText = ""
         isLoading = true
         
-        // Simulate API call (replace with actual Gateway integration)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            let response = "This is a simulated response. In a real implementation, this would be replaced with an actual API call to the Gateway service using the Kotlin Multiplatform client."
-            messages.append(Message(text: response, isFromUser: false))
-            isLoading = false
+        // Send message to OpenAI via Gateway
+        Task {
+            do {
+                let response = try await sendToOpenAI(message: currentInput)
+                await MainActor.run {
+                    messages.append(Message(text: response, isFromUser: false))
+                    isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    messages.append(Message(text: "Error: \(error.localizedDescription)", isFromUser: false))
+                    isLoading = false
+                }
+            }
         }
+    }
+    
+    private func sendToOpenAI(message: String) async throws -> String {
+        // Convert existing messages to OpenAI format
+        let chatMessages = messages.map { msg in
+            ChatMessage(
+                role: msg.isFromUser ? Role.User : Role.Assistant,
+                content: msg.text
+            )
+        }
+        
+        // Add the current user message
+        let allMessages = chatMessages + [ChatMessage(role: Role.User, content: message)]
+        
+        // Create chat completion request
+        let request = ChatCompletionRequest(
+            model: ModelId(id: "gpt-3.5-turbo"),
+            messages: allMessages,
+            temperature: 0.7,
+            maxTokens: 1000
+        )
+        
+        // Send request to OpenAI via Gateway
+        let response = try await openAIService.chatCompletions(request)
+        
+        // Extract the response text
+        guard let firstChoice = response.choices.first,
+              let content = firstChoice.message.content else {
+            throw NSError(domain: "OpenAI", code: -1, userInfo: [NSLocalizedDescriptionKey: "No response content received"])
+        }
+        
+        return content
     }
 }
 
