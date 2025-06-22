@@ -29,7 +29,9 @@ internal class AndroidGatewayImpl(
 
     override suspend fun warmUpAttestation() {
         if (integrityTokenProvider != null) return
-
+        require(config.googleCloudProjectNumber != null) {
+            "GatewayConfig must contain Google Cloud Project Number for Android Projects."
+        }
         withContext(Dispatchers.IO) {
             val integrityManager = IntegrityManagerFactory.createStandard(applicationContext)
             val request = PrepareIntegrityTokenRequest.builder()

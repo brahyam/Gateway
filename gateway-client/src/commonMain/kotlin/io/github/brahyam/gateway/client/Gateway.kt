@@ -122,5 +122,5 @@ public object Gateway {
  * Configuration for the Gateway client.
  */
 public data class GatewayConfig(
-    val googleCloudProjectNumber: Long,
+    val googleCloudProjectNumber: Long? = null,
 )
