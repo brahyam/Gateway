@@ -1,10 +1,12 @@
 # Gateway AI Client
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.brahyam/gateway-client?color=blue&label=Download)](https://central.sonatype.com/namespace/com.aallam.openai)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.brahyam/gateway-client?color=blue&label=Download)](https://central.sonatype.com/namespace/io.github.brahyam)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/brahyam/gateway-kmp/ci.yml?branch=main&logo=github)](
 [![License](https://img.shields.io/github/license/brahyam/gateway-kmp?color=yellow)](LICENSE.md)
 [![Documentation](https://img.shields.io/badge/docs-api-a97bff.svg?logo=kotlin)](https://docs.meetgateway.com/)
 
-Android and iOS client for [Gateway secure AI API](https://docs.meetgateway.com/)
+Android and iOS client for accessing different AI providers (OpenAI, Claude...) directly or with API
+key protection through [Gateway's servers](https://meetgateway.com/)
 
 [Jump to the iOS setup](#-ios--swift-package-manager-setup)
 

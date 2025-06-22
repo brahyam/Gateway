@@ -13,6 +13,20 @@ if [ ! -f "gateway-client/build.gradle.kts" ]; then
     exit 1
 fi
 
+# Read version from gradle.properties
+if [ ! -f "gradle.properties" ]; then
+    echo "❌ gradle.properties not found"
+    exit 1
+fi
+
+VERSION_NAME=$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2)
+if [ -z "$VERSION_NAME" ]; then
+    echo "❌ VERSION_NAME not found in gradle.properties"
+    exit 1
+fi
+
+echo "📋 Using version: $VERSION_NAME"
+
 # Build the XCFramework
 echo "📦 Building XCFramework..."
 ./gradlew :gateway-client:assembleGatewayXCFramework
@@ -61,7 +75,7 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "Gateway",
-            url: "https://github.com/brahyam/gateway-kmp/releases/download/v0.1.0/Gateway.xcframework.zip",
+            url: "https://github.com/brahyam/gateway-kmp/releases/download/$VERSION_NAME/Gateway.xcframework.zip",
             checksum: "$CHECKSUM"
         )
     ]
@@ -86,7 +100,7 @@ echo "📋 Next steps:"
 echo "1. Upload $ZIP_PATH to GitHub releases"
 echo "2. Update the URL in Package.swift with the actual release URL"
 echo "3. Commit and push: git add Package.swift .gitignore && git commit -m 'Add Swift Package Manager support'"
-echo "4. Create and push a tag: git tag v0.1.0 && git push origin v0.1.0"
+echo "4. Create and push a tag: git tag $VERSION_NAME && git push origin $VERSION_NAME"
 echo ""
 echo "🔗 Users can then add the package using:"
 echo "   https://github.com/brahyam/gateway-kmp.git"
