@@ -15,61 +15,65 @@ struct Message: Identifiable {
 }
 
 struct ContentView: View {
-    @State private var result: String = "Ready to test Gateway"
+    @State private var messages: [Message] = []
+    @State private var inputText: String = ""
     @State private var isLoading: Bool = false
     
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "network")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-                .font(.system(size: 50))
-            
-            Text("Gateway KMP Integration")
-                .font(.title)
-                .fontWeight(.bold)
-            
-            Text("Swift Package Manager Example")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            
-            Text(result)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(8)
-                .multilineTextAlignment(.center)
-            
-            Button(action: testGateway) {
-                HStack {
-                    if isLoading {
-                        ProgressView()
-                            .scaleEffect(0.8)
+        VStack {
+            // Chat messages
+            ScrollView {
+                LazyVStack(spacing: 8) {
+                    ForEach(messages) { message in
+                        MessageBubble(message: message)
                     }
-                    Text(isLoading ? "Testing..." : "Test Gateway")
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(8)
+                .padding(.horizontal, 16)
             }
-            .disabled(isLoading)
+            .padding(.top, 1)
             
-            Spacer()
+            // Loading indicator
+            if isLoading {
+                ProgressView()
+                    .scaleEffect(1.2)
+                    .padding()
+            }
+            
+            // Input area
+            HStack {
+                TextField("Type a message...", text: $inputText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .disabled(isLoading)
+                
+                Button(action: sendMessage) {
+                    Image(systemName: "paperplane.fill")
+                        .foregroundColor(.white)
+                        .padding(8)
+                        .background(Color.blue)
+                        .clipShape(Circle())
+                }
+                .disabled(inputText.isEmpty || isLoading)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
         }
-        .padding()
+        .navigationTitle("Chat")
     }
     
-    private func testGateway() {
-        isLoading = true
-        result = "Testing Gateway integration..."
+    private func sendMessage() {
+        guard !inputText.isEmpty && !isLoading else { return }
         
-        // Simulate async operation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            // Here you would typically call your Gateway methods
-            // For now, we'll just show a success message
-            result = "✅ Gateway integration successful!\n\nThis demonstrates that the XCFramework is properly linked and the Swift Package Manager integration is working correctly."
+        let userMessage = Message(text: inputText, isFromUser: true)
+        messages.append(userMessage)
+        
+        let currentInput = inputText
+        inputText = ""
+        isLoading = true
+        
+        // Simulate API call (replace with actual Gateway integration)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            let response = "This is a simulated response. In a real implementation, this would be replaced with an actual API call to the Gateway service using the Kotlin Multiplatform client."
+            messages.append(Message(text: response, isFromUser: false))
             isLoading = false
         }
     }
@@ -99,5 +103,7 @@ struct MessageBubble: View {
 }
 
 #Preview {
-    ContentView()
+    NavigationView {
+        ContentView()
+    }
 }

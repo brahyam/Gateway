@@ -16,7 +16,7 @@ Add this package to your Xcode project:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/brahyam/gateway-kmp.git", from: "0.1.0")
+    .package(url: "https://github.com/brahyam/gateway-kmp.git", from: "v0.1.0")
 ]
 ```
 
