@@ -15,9 +15,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "Gateway",
-            url:
-                "https://github.com/brahyam/gateway-kmp/releases/download/0.1.2/Gateway.xcframework.zip",
-            checksum: "f7ba1efe2dd03f4de5e2ae12e068b14a1b6e766933be1a8820e2fbba11e0b684"
+            url: "https://github.com/brahyam/Gateway/releases/download/0.1.8/Gateway.xcframework.zip",
+            checksum: "7bd2bc906adf07be64dbc6b77cb89f7ded986f3559a765ee424ff22dc2cda0ea"
         )
     ]
 )

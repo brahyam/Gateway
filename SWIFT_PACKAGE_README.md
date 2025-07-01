@@ -7,7 +7,7 @@ This is the Swift Package Manager distribution for the Gateway library.
 Add this package to your Xcode project:
 
 1. In Xcode, go to **File** → **Add Package Dependencies**
-2. Enter the URL: `https://github.com/brahyam/gateway-kmp.git`
+2. Enter the URL: `https://github.com/brahyam/Gateway.git`
 3. Add the package to your target
 
 ## Usage
@@ -16,7 +16,7 @@ Add this package to your Xcode project:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/brahyam/gateway-kmp.git", from: "v0.1.0")
+    .package(url: "https://github.com/brahyam/Gateway.git", from: "v0.1.0")
 ]
 ```
 
@@ -92,4 +92,4 @@ print(response.choices[0].message.content)
 
 ## Documentation
 
-For more information, see the main repository: https://github.com/brahyam/gateway-kmp
+For more information, see the main repository: https://github.com/brahyam/Gateway

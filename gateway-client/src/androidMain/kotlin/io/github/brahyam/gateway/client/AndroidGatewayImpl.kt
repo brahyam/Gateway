@@ -3,6 +3,7 @@ package io.github.brahyam.gateway.client
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.StandardIntegrityManager.PrepareIntegrityTokenRequest
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityTokenProvider
@@ -10,6 +11,7 @@ import com.google.android.play.core.integrity.StandardIntegrityManager.StandardI
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -26,8 +28,24 @@ internal class AndroidGatewayImpl(
     private val applicationContext: Context,
 ) : GatewayImpl {
     private var integrityTokenProvider: StandardIntegrityTokenProvider? = null
+    private val prefs: SharedPreferences by lazy {
+        applicationContext.getSharedPreferences("gateway_prefs", Context.MODE_PRIVATE)
+    }
+    private val ANON_ID_KEY = "gateway_anon_id"
+    private var cachedAnonId: String? = null
 
     override suspend fun warmUpAttestation() {
+        if (config.enableAnonymousId) {
+            var anonId = prefs.getString(ANON_ID_KEY, null)
+            if (anonId == null) {
+                anonId = UUID.randomUUID().toString()
+                with(prefs.edit()) {
+                    putString(ANON_ID_KEY, anonId)
+                    apply()
+                }
+            }
+            cachedAnonId = anonId
+        }
         if (integrityTokenProvider != null) return
         require(config.googleCloudProjectNumber != null) {
             "GatewayConfig must contain Google Cloud Project Number for Android Projects."
@@ -75,4 +93,12 @@ internal class AndroidGatewayImpl(
             }
         }
     }
-} 
+
+    override suspend fun getAnonymousId(): String {
+        if (!config.enableAnonymousId) throw IllegalStateException("Anonymous ID not enabled in config")
+        return cachedAnonId ?: prefs.getString(ANON_ID_KEY, null)
+        ?: throw IllegalStateException("Anonymous ID not initialized. Call warmUpAttestation() first.")
+    }
+}
+
+internal actual fun getDeviceType(): String = "android"

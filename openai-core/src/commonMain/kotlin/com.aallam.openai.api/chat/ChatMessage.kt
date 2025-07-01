@@ -1,5 +1,6 @@
 package com.aallam.openai.api.chat
 
+import co.touchlab.skie.configuration.annotations.DefaultArgumentInterop
 import com.aallam.openai.api.OpenAIDsl
 import com.aallam.openai.api.chat.internal.ContentSerializer
 import kotlinx.serialization.SerialName
@@ -57,6 +58,8 @@ public data class ChatMessage(
     @SerialName("content_filter_offsets") public val contentFilterOffsets: List<ContentFilterOffsets>? = null,
 ) {
 
+    @DefaultArgumentInterop.Enabled
+    @DefaultArgumentInterop.MaximumDefaultArgumentCount(10)
     public constructor(
         role: ChatRole,
         content: String? = null,

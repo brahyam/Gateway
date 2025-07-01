@@ -6,6 +6,7 @@ plugins {
     id("com.diffplug.spotless")
     id("org.jetbrains.dokka")
     id("build-support")
+    id("co.touchlab.skie")
 }
 
 kotlin {
@@ -26,6 +27,7 @@ kotlin {
                 api(libs.kotlinx.io.core)
                 api(libs.serialization.json)
                 implementation(libs.serialization.core)
+                implementation(libs.skie.annotations)
             }
         }
         val commonTest by getting {

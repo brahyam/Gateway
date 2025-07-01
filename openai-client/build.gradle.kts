@@ -1,4 +1,3 @@
-import co.touchlab.skie.configuration.DefaultArgumentInterop
 import org.jetbrains.kotlin.konan.target.HostManager
 
 plugins {
@@ -9,7 +8,6 @@ plugins {
     id("com.diffplug.spotless")
     id("org.jetbrains.dokka")
     id("build-support")
-    id("co.touchlab.skie")
 }
 
 kotlin {
@@ -90,14 +88,6 @@ kotlin {
                     implementation(libs.ktor.client.darwin)
                 }
             }
-        }
-    }
-}
-
-skie {
-    features {
-        group {
-            DefaultArgumentInterop.Enabled(true)
         }
     }
 }

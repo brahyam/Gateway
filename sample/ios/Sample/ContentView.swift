@@ -20,17 +20,8 @@ struct ContentView: View {
     @State private var inputText: String = ""
     @State private var isLoading: Bool = false
     
-    // Gateway OpenAI service instance
-    private let openAIService: OpenAIService = Gateway.shared.protectedOpenAIService(partialKey: <#T##String#>, serviceURL: <#T##String#>, logging: <#T##Openai_clientLoggingConfig#>, timeout: <#T##Openai_coreTimeout#>, organization: <#T##String?#>, headers: <#T##[String : String]#>, proxy: <#T##(any Openai_clientProxyConfig)?#>, retry: <#T##Openai_clientRetryStrategy#>) {
-        // Replace these with your actual Gateway credentials
-        let partialKey = "your-partial-key-here"
-        let serviceURL = "https://your-gateway-service-url.com"
-        
-        return Gateway.protectedOpenAIService(
-            partialKey: partialKey,
-            serviceURL: serviceURL
-        )
-    }()
+    private let openAiService = Gateway_.shared.createOpenAIService(
+    partialKey: "YOUR_GATEWAY_PARTIAL_KEY", serviceURL: "YOUR_GATEWAY_SERVICE_URL")
     
     var body: some View {
         VStack {
@@ -103,25 +94,16 @@ struct ContentView: View {
     private func sendToOpenAI(message: String) async throws -> String {
         // Convert existing messages to OpenAI format
         let chatMessages = messages.map { msg in
-            ChatMessage(
-                role: msg.isFromUser ? Role.User : Role.Assistant,
-                content: msg.text
-            )
+            Gateway.Openai_coreChatMessage(role: msg.isFromUser ? "user" : "assistant", content: msg.text)
         }
         
         // Add the current user message
-        let allMessages = chatMessages + [ChatMessage(role: Role.User, content: message)]
+        let allMessages = chatMessages + [Gateway.Openai_coreChatMessage(role: "user", content: message)]
         
-        // Create chat completion request
-        let request = ChatCompletionRequest(
-            model: ModelId(id: "gpt-3.5-turbo"),
-            messages: allMessages,
-            temperature: 0.7,
-            maxTokens: 1000
-        )
+        let request = Gateway.Openai_coreChatCompletionRequest(model: "gpt-4o-mini", messages: allMessages, reasoningEffort: nil, temperature: nil, topP: nil, n: nil, stop: nil, store: nil, maxTokens: nil, maxCompletionTokens: nil, presencePenalty: nil, frequencyPenalty: nil, logitBias: nil, user: nil, functions: nil, functionCall: nil, responseFormat: nil, tools: nil, toolChoice: nil, seed: nil, logprobs: nil, topLogprobs: nil, instanceId: nil, streamOptions: nil)
         
         // Send request to OpenAI via Gateway
-        let response = try await openAIService.chatCompletions(request)
+        let response = try await openAiService.chatCompletion(request: request, requestOptions: nil)
         
         // Extract the response text
         guard let firstChoice = response.choices.first,

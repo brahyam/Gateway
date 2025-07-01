@@ -12,7 +12,7 @@ import Gateway
 struct SampleApp: App {
     init() {
         // Initialize the Gateway SDK
-        Gateway.shared.configure(config: GatewayConfig(googleCloudProjectNumber: nil))
+        Gateway_.shared.configureIOS()
     }
     var body: some Scene {
         WindowGroup {

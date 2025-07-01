@@ -1,11 +1,13 @@
 package io.github.brahyam.gateway.client
 
+import co.touchlab.skie.configuration.annotations.DefaultArgumentInterop
 import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAIConfig
 import com.aallam.openai.client.OpenAIHost
 import com.aallam.openai.client.ProxyConfig
 import com.aallam.openai.client.RetryStrategy
+import gateway_kmp.gateway_client.BuildConfig
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
 import kotlinx.coroutines.CoroutineScope
@@ -17,6 +19,7 @@ import kotlin.time.Duration.Companion.seconds
  * Gateway client for access AI services.
  */
 public object Gateway {
+    public const val VERSION: String = BuildConfig.GATEWAY_VERSION
     private var config: GatewayConfig? = null
     private var instance: GatewayImpl? = null
 
@@ -36,7 +39,7 @@ public object Gateway {
 
     /**
      * Get an unprotected OpenAI service instance for BYOK (Bring Your Own Key) use cases.
-     * This should only be used in development or when you want to use your own OpenAI API key.
+     * This should only be used in development or when you want your users to add their own OpenAI API key.
      *
      * @param apiKey Your OpenAI API key
      * @param logging client logging configuration
@@ -50,7 +53,9 @@ public object Gateway {
      * @param httpClientConfig additional custom client configuration
      * @return An OpenAI service instance
      */
-    public fun unprotectedOpenAIService(
+    @DefaultArgumentInterop.Enabled
+    @DefaultArgumentInterop.MaximumDefaultArgumentCount(12)
+    public fun createDirectOpenAIService(
         apiKey: String,
         logging: LoggingConfig = LoggingConfig(),
         timeout: Timeout = Timeout(socket = 30.seconds),
@@ -75,7 +80,7 @@ public object Gateway {
             engine = engine,
             httpClientConfig = httpClientConfig
         )
-        return UnprotectedOpenAIService(openAIConfig)
+        return GatewayDirectOpenAIService(openAIConfig)
     }
 
     /**
@@ -84,9 +89,18 @@ public object Gateway {
      *
      * @param partialKey Partial key from your Gateway developer dashboard
      * @param serviceURL Service URL from your Gateway developer dashboard
+     * @param logging Client logging configuration
+     * @param timeout HTTP client timeout
+     * @param organization OpenAI organization ID
+     * @param headers Extra HTTP headers
+     * @param proxy HTTP proxy configuration
+     * @param retry Rate limit retry configuration
      * @return A protected OpenAI service instance
+     *
      */
-    public fun protectedOpenAIService(
+    @DefaultArgumentInterop.Enabled
+    @DefaultArgumentInterop.MaximumDefaultArgumentCount(12)
+    public fun createOpenAIService(
         partialKey: String,
         serviceURL: String,
         logging: LoggingConfig = LoggingConfig(),
@@ -99,7 +113,7 @@ public object Gateway {
         checkConfigured()
         val openAIConfig = OpenAIConfig(
             token = partialKey,
-            host = OpenAIHost(serviceURL),
+            host = OpenAIHost("$serviceURL/v1/"),
             engine = createPinnedEngine(),
             logging = logging,
             timeout = timeout,
@@ -108,7 +122,7 @@ public object Gateway {
             proxy = proxy,
             retry = retry
         )
-        return ProtectedOpenAIService(openAIConfig, instance!!)
+        return GatewayOpenAIService(openAIConfig, instance!!)
     }
 
     private fun checkConfigured() {
@@ -122,5 +136,6 @@ public object Gateway {
  * Configuration for the Gateway client.
  */
 public data class GatewayConfig(
-    val googleCloudProjectNumber: Long? = null,
+    val googleCloudProjectNumber: Long?,
+    val enableAnonymousId: Boolean = false,
 )

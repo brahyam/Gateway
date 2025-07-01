@@ -35,7 +35,7 @@ subprojects {
         repositories {
             maven {
                 name = "githubPackages"
-                url = uri("https://maven.pkg.github.com/brahyam/gateway-kmp")
+                url = uri("https://maven.pkg.github.com/brahyam/Gateway")
                 // username and password (a personal Github access token) should be specified as
                 // `githubPackagesUsername` and `githubPackagesPassword` Gradle properties or alternatively
                 // as `ORG_GRADLE_PROJECT_githubPackagesUsername` and `ORG_GRADLE_PROJECT_githubPackagesPassword`

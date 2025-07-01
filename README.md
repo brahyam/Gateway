@@ -24,7 +24,8 @@ dependencies {
 }
 ```
 
-2. Configure the client early in your application startup:
+2. Get your [GCP project number](https://console.cloud.google.com/welcome) and use it to configure
+   the client early in your application startup:
 
 ```kotlin
 import android.app.Application
@@ -34,7 +35,7 @@ import io.github.brahyam.gateway.client.GatewayConfig
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        val config = GatewayConfig(googleCloudProjectNumber = 1234567890) // your Google Cloud project number
+       val config = GatewayConfig(googleCloudProjectNumber = YOUR_GCP_PROJECT_NUMBER)
         Gateway.configure(config)
     }
 } 
@@ -79,7 +80,7 @@ println(response.choices[0].message.content)
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/brahyam/gateway-kmp.git", from: "0.1.0")
+    .package(url: "https://github.com/brahyam/Gateway.git", from: "0.1.0")
 ]
 ```
 

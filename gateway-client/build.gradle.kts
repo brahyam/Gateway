@@ -1,4 +1,3 @@
-import co.touchlab.skie.configuration.DefaultArgumentInterop
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 import java.io.FileInputStream
 import java.util.Properties
@@ -20,6 +19,10 @@ buildConfig {
     val localProperties = Properties().apply {
         load(FileInputStream(File(rootProject.rootDir, "local.properties")))
     }
+    val gradleProperties = Properties().apply {
+        load(FileInputStream(File(rootProject.rootDir, "gradle.properties")))
+    }
+    buildConfigField("GATEWAY_VERSION", gradleProperties.getProperty("VERSION_NAME"))
     buildConfigField("GATEWAY_HOST", localProperties.getProperty("GATEWAY_HOST"))
     buildConfigField(
         "GATEWAY_PINS",
@@ -107,14 +110,7 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
-        }
-    }
-}
-
-skie {
-    features {
-        group {
-            DefaultArgumentInterop.Enabled(true)
+            implementation(libs.skie.annotations)
         }
     }
 }

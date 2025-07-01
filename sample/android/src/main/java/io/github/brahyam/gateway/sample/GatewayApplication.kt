@@ -8,5 +8,6 @@ class GatewayApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         Gateway.configure(GatewayConfig(BuildConfig.GOOGLE_CLOUD_PROJECT_NUMBER))
+        println("initialized Gateway ${Gateway.VERSION}")
     }
 } 

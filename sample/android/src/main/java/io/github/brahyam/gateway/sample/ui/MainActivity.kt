@@ -58,12 +58,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Use this for BYOK (Bring Your Own Key) or during development
-        openAIService = Gateway.unprotectedOpenAIService(
+        openAIService = Gateway.createDirectOpenAIService(
             apiKey = BuildConfig.OPENAI_API_KEY
         )
 
         // Use this for production use cases with Gateway protection
-        openAIService = Gateway.protectedOpenAIService(
+        openAIService = Gateway.createOpenAIService(
             partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
             serviceURL = BuildConfig.GATEWAY_SERVICE_URL
         )
@@ -188,6 +188,6 @@ fun MessageBubble(message: Message) {
 @Composable
 fun ChatScreenPreview() {
     SampleTheme {
-        ChatScreen(Gateway.unprotectedOpenAIService(12345.toLong().toString()))
+        ChatScreen(Gateway.createDirectOpenAIService(12345.toLong().toString()))
     }
 }
