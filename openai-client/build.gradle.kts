@@ -13,8 +13,6 @@ plugins {
 kotlin {
     explicitApi()
     jvm()
-    jsNode()
-    jsWasm()
     native()
 
     sourceSets {
@@ -56,25 +54,6 @@ kotlin {
                 implementation(kotlin("test-junit"))
                 implementation(libs.ktor.client.okhttp)
                 implementation(libs.logback.classic)
-            }
-        }
-
-        val jsMain by getting {
-            dependencies {
-            }
-        }
-        val jsTest by getting {
-            dependencies {
-                implementation(kotlin("test-js"))
-            }
-        }
-        val wasmJsMain by getting {
-            dependencies {
-            }
-        }
-        val wasmJsTest by getting {
-            dependencies {
-                implementation(kotlin("test-wasm-js"))
             }
         }
         val desktopTest by getting {

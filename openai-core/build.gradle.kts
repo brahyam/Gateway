@@ -12,8 +12,6 @@ plugins {
 kotlin {
     explicitApi()
     jvm()
-    jsNode()
-    jsWasm()
     native()
 
     sourceSets {
@@ -39,16 +37,6 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation(kotlin("test-junit"))
-            }
-        }
-        val jsTest by getting {
-            dependencies {
-                implementation(kotlin("test-js"))
-            }
-        }
-        val wasmJsTest by getting {
-            dependencies {
-                implementation(kotlin("test-wasm-js"))
             }
         }
     }

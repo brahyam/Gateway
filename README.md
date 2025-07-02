@@ -35,37 +35,46 @@ import io.github.brahyam.gateway.client.GatewayConfig
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-       val config = GatewayConfig(googleCloudProjectNumber = YOUR_GCP_PROJECT_NUMBER)
-        Gateway.configure(config)
+        // Replace with your actual Google Cloud Project Number (see https://console.cloud.google.com/welcome)
+        Gateway.configure(GatewayConfig(googleCloudProjectNumber = "YOUR_GCP_PROJECT_NUMBER"))
     }
-} 
+}
 ```
 
 3. Create an instance of a service eg. OpenAI service:
 
-For development use the unprotected service (requests go straight to the OpenAI API):
+You can use either the direct (unprotected) service for development, or the Gateway-protected service for production. See the [sample app](sample/README.md) for a complete example.
+
+**Direct (Unprotected) OpenAI Service**
+
+Use this for development. Requests go straight to the OpenAI API.
 
 ```kotlin
-val openAiService = Gateway.unprotectedOpenAIService(
-    apiKey = "your-openai-api-key", // get it from OpenAI dashboard
+import io.github.brahyam.gateway.client.Gateway
+import io.github.brahyam.gateway.client.OpenAIService
+
+// ... inside your Activity ...
+
+val openAIService: OpenAIService = Gateway.createDirectOpenAIService(
+    apiKey = "your-openai-api-key" // Get this from https://platform.openai.com/api-keys
 )
 ```
 
-For production use the protected service (requests go through the Gateway and are protected with
-device attestation, certificate pinning, api key protection, ip rate limiting):
+**Gateway-Protected OpenAI Service**
+
+Use this for production. Requests go through Gateway and are protected with device attestation, certificate pinning, API key protection, and rate limiting.
 
 ```kotlin
-val openAiService = Gateway.protectedOpenAIService(
-    partialKey = "your-partial-key", // get it from Gateway dashboard
-    serviceUrl = "your service url" // get it from Gateway dashboard
+val openAIService: OpenAIService = Gateway.createOpenAIService(
+    partialKey = "your-partial-key", // Get this from the Gateway dashboard
+    serviceURL = "your-service-url"   // Get this from the Gateway dashboard
 )
 ```
 
-4. Use your `openAiService` to make API requests. [Learn more](guides/GettingStarted.md).
+4. Use your `openAIService` to make API requests. [Learn more](guides/GettingStarted.md).
 
 ```kotlin
-// suspending function
-val response = openAiService.chatCompletion(
+val response = openAIService.chatCompletion(
     request = ChatCompletionRequest(
         model = ModelId("gpt-4o-mini"),
         messages = listOf(ChatMessage(role = Role.User, content = "Hello, how are you?"))
@@ -73,6 +82,8 @@ val response = openAiService.chatCompletion(
 )
 println(response.choices[0].message.content)
 ```
+
+For a complete working example, check out the [sample app](sample/android/README.md).
 
 ## 📦 iOS / Swift Package Manager Setup
 
@@ -84,71 +95,65 @@ dependencies: [
 ]
 ```
 
-2. Configure the client early in your application startup (in AppDelegate or SceneDelegate):
+2. Configure the Gateway client early in your application startup (in your SwiftUI `@main` App struct):
 
 ```swift
 import Gateway
 
 @main
-struct MyApp: App {
+struct SampleApp: App {
     init() {
-        Gateway.configure()
+        // Initialize the Gateway SDK for iOS
+        Gateway_.shared.configureIOS()
+    }
+    var body: some Scene {
+        WindowGroup {
+            NavigationView {
+                ContentView()
+            }
+        }
     }
 }
 ```
 
-or
+3. Create an instance of the OpenAI service in your view or view model:
 
 ```swift
 import Gateway
 
-@UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+// Use your Gateway partial key and service URL from the Gateway dashboard
+let openAiService = Gateway_.shared.createOpenAIService(
+    partialKey: "YOUR_GATEWAY_PARTIAL_KEY",
+    serviceURL: "YOUR_GATEWAY_SERVICE_URL"
+)
+```
 
-    var window: UIWindow?
+4. Use your `openAiService` to make API requests. For example, to send a chat message in SwiftUI:
 
-    func application(_ application: UIApplication,
-                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        Gateway.configure()
-        return true
-    }
+```swift
+import Gateway
+
+// ... inside your async function or Task ...
+
+// Prepare messages in OpenAI format
+let chatMessages = messages.map { msg in
+    Gateway.Openai_coreChatMessage(role: msg.isFromUser ? "user" : "assistant", content: msg.text)
+}
+let allMessages = chatMessages + [Gateway.Openai_coreChatMessage(role: "user", content: inputText)]
+
+let request = Gateway.Openai_coreChatCompletionRequest(model: "gpt-4o-mini", messages: allMessages, reasoningEffort: nil, temperature: nil, topP: nil, n: nil, stop: nil, store: nil, maxTokens: nil, maxCompletionTokens: nil, presencePenalty: nil, frequencyPenalty: nil, logitBias: nil, user: nil, functions: nil, functionCall: nil, responseFormat: nil, tools: nil, toolChoice: nil, seed: nil, logprobs: nil, topLogprobs: nil, instanceId: nil, streamOptions: nil)
+
+let response = try await openAiService.chatCompletion(request: request, requestOptions: nil)
+
+if let firstChoice = response.choices.first, let content = firstChoice.message.content {
+    // Use the response content
+    print(content)
 }
 ```
 
-3. Create an instance of a service eg. OpenAI service:
+For a complete working example, see the [iOS sample app](sample/ios/Sample/README.md).
 
-For development use the unprotected service (requests go straight to the OpenAI API):
-
-```swift
-import Gateway
-
-let openAiService = Gateway.unprotectedOpenAIService(
-    apiKey = "your-openai-api-key", // get it from OpenAI dashboard
-)
-
-For production use the protected service (requests go through the Gateway and are protected with device attestation, certificate pinning, api key protection, ip rate limiting):
-
-```swift
-let openAiService = Gateway.protectedOpenAIService(
-    partialKey = "your-partial-key", // get it from Gateway dashboard
-    serviceUrl = "your service url" // get it from Gateway dashboard
-)
-```
-
-4. Use your `openAiService` to make API requests. [Learn more](guides/GettingStarted.md).
-
-```swift
-// async function
-let response = openAiService.chatCompletion(
-    request = ChatCompletionRequest(
-        model = ModelId("gpt-4o-mini"),
-        messages = listOf(ChatMessage(role = Role.User, content = "Hello, how are you?"))
-    )
-)
-print(response.choices[0].message.content)
-```
-
-### Supported features
+### OpenAI Service Supported features
 
 - [Models](guides/GettingStarted.md#models)
 - [Chat](guides/GettingStarted.md#chat)
