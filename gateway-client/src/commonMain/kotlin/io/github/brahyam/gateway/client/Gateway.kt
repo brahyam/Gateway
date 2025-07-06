@@ -20,18 +20,27 @@ import kotlin.time.Duration.Companion.seconds
  */
 public object Gateway {
     public const val VERSION: String = BuildConfig.GATEWAY_VERSION
-    private var config: GatewayConfig? = null
     private var instance: GatewayImpl? = null
+    public var logger: Logger = PrintlnLogger()
 
     /**
      * Configure the Gateway client. This must be called before using any other Gateway functionality.
      *
-     * @param config The configuration for the Gateway client.
+     * @param googleCloudProjectNumber The Google Cloud Project Number (Android only, nullable for iOS)
+     * @param enableAnonymousId Whether to enable anonymous ID support
+     * @param logger Optional logger implementation. If null, uses a simple println logger.
+     * @param logLevel The minimum log level for logging (default: INFO)
      */
-    public fun configure(config: GatewayConfig) {
-        this.config = config
-        this.instance = createGatewayImpl(config)
-
+    @DefaultArgumentInterop.Enabled
+    @DefaultArgumentInterop.MaximumDefaultArgumentCount(6)
+    public fun configure(
+        googleCloudProjectNumber: Long? = null,
+        enableAnonymousId: Boolean = false,
+        logger: Logger? = null,
+        logLevel: LogLevel = LogLevel.INFO,
+    ) {
+        this.logger = logger ?: PrintlnLogger(logLevel)
+        this.instance = createGatewayImpl(googleCloudProjectNumber, enableAnonymousId)
         CoroutineScope(Dispatchers.Default).launch {
             instance?.warmUpAttestation()
         }
@@ -95,6 +104,7 @@ public object Gateway {
      * @param headers Extra HTTP headers
      * @param proxy HTTP proxy configuration
      * @param retry Rate limit retry configuration
+     * @param enableCertPinning Whether to enable certificate pinning
      * @return A protected OpenAI service instance
      *
      */
@@ -109,12 +119,13 @@ public object Gateway {
         headers: Map<String, String> = emptyMap(),
         proxy: ProxyConfig? = null,
         retry: RetryStrategy = RetryStrategy(),
+        enableCertPinning: Boolean = true,
     ): OpenAIService {
         checkConfigured()
         val openAIConfig = OpenAIConfig(
             token = partialKey,
             host = OpenAIHost("$serviceURL/v1/"),
-            engine = createPinnedEngine(),
+            engine = if (enableCertPinning) createPinnedEngine() else null,
             logging = logging,
             timeout = timeout,
             organization = organization,
@@ -126,16 +137,8 @@ public object Gateway {
     }
 
     private fun checkConfigured() {
-        require(config != null && instance != null) {
+        require(instance != null) {
             "Gateway must be configured before use. Call Gateway.configure() first."
         }
     }
 }
-
-/**
- * Configuration for the Gateway client.
- */
-public data class GatewayConfig(
-    val googleCloudProjectNumber: Long?,
-    val enableAnonymousId: Boolean = false,
-)

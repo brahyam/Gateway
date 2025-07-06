@@ -6,4 +6,7 @@ internal interface GatewayImpl {
     suspend fun getAnonymousId(): String
 }
 
-internal expect fun createGatewayImpl(config: GatewayConfig): GatewayImpl
+internal expect fun createGatewayImpl(
+    googleCloudProjectNumber: Long?,
+    enableAnonymousId: Boolean,
+): GatewayImpl

@@ -11,16 +11,19 @@ import platform.UIKit.UIDevice
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-internal actual fun createGatewayImpl(config: GatewayConfig): GatewayImpl {
-    return IOSGatewayImpl(config)
+internal actual fun createGatewayImpl(
+    googleCloudProjectNumber: Long?,
+    enableAnonymousId: Boolean,
+): GatewayImpl {
+    return IOSGatewayImpl(enableAnonymousId)
 }
 
 internal class IOSGatewayImpl(
-    private val config: GatewayConfig,
+    private val enableAnonymousId: Boolean,
 ) : GatewayImpl {
     private var cachedAnonId: String? = null
     override suspend fun warmUpAttestation() {
-        if (config.enableAnonymousId) {
+        if (enableAnonymousId) {
             val defaults = NSUserDefaults.standardUserDefaults
             val key = "gateway_anon_id"
             var anonId = defaults.stringForKey(key)
@@ -35,61 +38,71 @@ internal class IOSGatewayImpl(
     }
 
     override suspend fun getIntegrityToken(): String {
-        println("[Gateway] Entering getIntegrityToken() - Requesting iOS Device Check Token...")
+        Gateway.logger.debug("Entering getIntegrityToken() - Requesting iOS Device Check Token...")
 
         // Simulator detection
-        val isSimulator = UIDevice.currentDevice.model.contains("Simulator")
-        if (isSimulator) {
-            println("[Gateway] Running on Simulator - returning dummy Device Check token.")
-            return "SIMULATOR_DUMMY_TOKEN"
+        val device = UIDevice.currentDevice.model
+        val isSimulator = device.contains("Simulator")
+        val deviceNotSupported = DCDevice.currentDevice.isSupported()
+        Gateway.logger.debug("Device model: ${UIDevice.currentDevice.model}")
+        if (isSimulator || !deviceNotSupported) {
+            Gateway.logger.warn("Running on Simulator or not supported device ($device) - returning dummy Device Check token.")
+            return "DUMMY_TOKEN"
         }
 
         return withContext(Dispatchers.Default) {
             suspendCancellableCoroutine { continuation ->
-                DCDevice.currentDevice().generateTokenWithCompletionHandler { token, error ->
+                DCDevice.currentDevice.generateTokenWithCompletionHandler { token, error ->
                     if (error != null) {
                         val nsError = error
-                        println("[Gateway] Error generating iOS Device Check token: ${nsError.localizedDescription}")
+                        Gateway.logger.error("Error generating iOS Device Check token: ${nsError.localizedDescription}")
                         continuation.resumeWithException(
                             RuntimeException(
                                 "Failed to generate iOS Device Check token: ${nsError.localizedDescription}",
                                 Exception(nsError.localizedDescription)
                             )
                         )
-                        println("[Gateway] Coroutine resumed with exception (error case)")
+                        Gateway.logger.error("Coroutine resumed with exception (error case)")
                     } else if (token != null) {
-                        println("[Gateway] Successfully generated iOS Device Check Token.")
+                        Gateway.logger.info("Successfully generated iOS Device Check Token.")
                         // Convert the token data to base64 string
                         val tokenString = token.base64Encoding()
                         continuation.resume(tokenString)
-                        println("[Gateway] Coroutine resumed with token (success case)")
+                        Gateway.logger.debug("Coroutine resumed with token (success case)")
                     } else {
-                        println("[Gateway] iOS Device Check token generation returned null (no token, no error)")
+                        Gateway.logger.error("iOS Device Check token generation returned null (no token, no error)")
                         continuation.resumeWithException(
                             RuntimeException("iOS Device Check token generation returned null")
                         )
-                        println("[Gateway] Coroutine resumed with exception (null case)")
+                        Gateway.logger.error("Coroutine resumed with exception (null case)")
                     }
                 }
             }
         }.also {
-            println("[Gateway] Exiting getIntegrityToken()")
+            Gateway.logger.debug("Exiting getIntegrityToken()")
         }
     }
 
     override suspend fun getAnonymousId(): String {
-        if (!config.enableAnonymousId) throw IllegalStateException("Anonymous ID not enabled in config")
+        if (!enableAnonymousId) throw IllegalStateException("Anonymous ID not enabled in config")
         return cachedAnonId ?: NSUserDefaults.standardUserDefaults.stringForKey("gateway_anon_id")
         ?: throw IllegalStateException("Anonymous ID not initialized. Call warmUpAttestation() first.")
     }
 }
 
-public fun Gateway.configureIOS(enableAnonymousId: Boolean = false) {
+public fun Gateway.configureIOS() {
     this.configure(
-        GatewayConfig(
-            googleCloudProjectNumber = null,
-            enableAnonymousId = enableAnonymousId
-        )
+        googleCloudProjectNumber = null,
+        enableAnonymousId = false,
+        logger = null
+    )
+}
+
+public fun Gateway.configureIOS(enableAnonymousId: Boolean, logger: Logger?) {
+    this.configure(
+        googleCloudProjectNumber = null,
+        enableAnonymousId = enableAnonymousId,
+        logger = logger
     )
 }
 

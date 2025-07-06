@@ -101,17 +101,21 @@ struct ContentView: View {
         let allMessages = chatMessages + [Gateway.Openai_coreChatMessage(role: "user", content: message)]
         
         let request = Gateway.Openai_coreChatCompletionRequest(model: "gpt-4o-mini", messages: allMessages, reasoningEffort: nil, temperature: nil, topP: nil, n: nil, stop: nil, store: nil, maxTokens: nil, maxCompletionTokens: nil, presencePenalty: nil, frequencyPenalty: nil, logitBias: nil, user: nil, functions: nil, functionCall: nil, responseFormat: nil, tools: nil, toolChoice: nil, seed: nil, logprobs: nil, topLogprobs: nil, instanceId: nil, streamOptions: nil)
-        
-        // Send request to OpenAI via Gateway
-        let response = try await openAiService.chatCompletion(request: request, requestOptions: nil)
-        
-        // Extract the response text
-        guard let firstChoice = response.choices.first,
-              let content = firstChoice.message.content else {
-            throw NSError(domain: "OpenAI", code: -1, userInfo: [NSLocalizedDescriptionKey: "No response content received"])
+
+        // Send request to OpenAI via Gateway with robust error handling
+        do {
+            let response = try await openAiService.chatCompletion(request: request, requestOptions: nil)
+            // Extract the response text
+            guard let firstChoice = response.choices.first,
+                  let content = firstChoice.message.content
+            else {
+                throw NSError(domain: "OpenAI", code: -1, userInfo: [NSLocalizedDescriptionKey: "No response content received"])
+            }
+            return content
+        } catch {
+            // You can add more specific error handling here if needed
+            throw NSError(domain: "OpenAI", code: -2, userInfo: [NSLocalizedDescriptionKey: "Failed to get response from OpenAI: \(error.localizedDescription)"])
         }
-        
-        return content
     }
 }
 
