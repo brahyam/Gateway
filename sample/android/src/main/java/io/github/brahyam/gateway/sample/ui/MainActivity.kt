@@ -59,14 +59,14 @@ class MainActivity : ComponentActivity() {
 
         // Use this for BYOK (Bring Your Own Key) or during development
         openAIService = Gateway.createDirectOpenAIService(
-            apiKey = BuildConfig.OPENAI_API_KEY
+            apiKey = BuildConfig.OPENAI_API_KEY // Replace with your OpenAI API key
         )
 
         // Use this for production use cases with Gateway protection
-        openAIService = Gateway.createOpenAIService(
-            partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
-            serviceURL = BuildConfig.GATEWAY_SERVICE_URL
-        )
+//        openAIService = Gateway.createOpenAIService(
+//            partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
+//            serviceURL = BuildConfig.GATEWAY_SERVICE_URL
+//        )
 
         enableEdgeToEdge()
         setContent {
