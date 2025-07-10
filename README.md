@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-   implementation "io.github.brahyam:gateway-client:0.1.0"
+   implementation "io.github.brahyam:gateway-client:0.1.9"
 }
 ```
 
@@ -36,7 +36,9 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         // Replace with your actual Google Cloud Project Number (see https://console.cloud.google.com/welcome)
-        Gateway.configure(GatewayConfig(googleCloudProjectNumber = "YOUR_GCP_PROJECT_NUMBER"))
+       Gateway.configure(
+          googleCloudProjectNumber = YOUR_GCP_PROJECT_NUMBER
+       )
     }
 }
 ```
@@ -56,7 +58,7 @@ import io.github.brahyam.gateway.client.OpenAIService
 // ... inside your Activity ...
 
 val openAIService: OpenAIService = Gateway.createDirectOpenAIService(
-    apiKey = "your-openai-api-key" // Get this from https://platform.openai.com/api-keys
+   apiKey = "your-openai-api-key"
 )
 ```
 
