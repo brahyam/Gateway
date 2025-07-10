@@ -93,7 +93,7 @@ For a complete working example, check out the [sample app](sample/android/README
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/brahyam/Gateway.git", from: "0.1.0")
+   .package(url: "https://github.com/brahyam/Gateway.git", from: "0.1.9")
 ]
 ```
 
@@ -184,7 +184,7 @@ Get started and understand more about how to use OpenAI API client for Kotlin wi
 
 ## ℹ️ Sample apps
 
-Sample apps are available under `sample`, please check the [README](sample/README.md) for running instructions.
+Sample apps are available under `sample`.
 
 ## ⭐️ Support
 
