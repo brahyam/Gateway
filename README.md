@@ -147,6 +147,68 @@ Get started and understand more about how to use OpenAI API client for Kotlin wi
 
 Sample apps are available under `sample`.
 
+## 🧩 Compose Multiplatform Sample Usage
+
+The [Compose Multiplatform sample](sample/kmp/composeApp/src/commonMain/kotlin/io/github/brahyam/gateway/kmpsample/App.kt)
+demonstrates how to use the Gateway AI Client in a shared Kotlin Multiplatform (KMP) UI targeting
+Android and iOS.
+
+### 1. Configure Gateway in shared code
+
+Configure Gateway early in your shared code (e.g., at app startup or before making API calls):
+
+```kotlin
+Gateway.configure(
+    googleCloudProjectNumber = BuildConfig.GOOGLE_CLOUD_PROJECT_NUMBER_STRING.toLong()
+)
+```
+
+- `BuildConfig.GOOGLE_CLOUD_PROJECT_NUMBER_STRING` should be set from your build configuration (see
+  sample for details).
+
+### 2. Create a Gateway-protected OpenAI service
+
+Use Gateway to create a protected OpenAI service instance:
+
+```kotlin
+val openAIService = Gateway.createOpenAIService(
+    serviceURL = BuildConfig.GATEWAY_SERVICE_URL,
+    partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
+)
+```
+
+- `BuildConfig.GATEWAY_SERVICE_URL` and `BuildConfig.GATEWAY_PARTIAL_KEY` are provided via your
+  build config or environment (see sample for setup).
+- This ensures requests are routed through Gateway with device attestation and API key protection.
+
+> **Note:** For development, you can use the direct OpenAI service (not recommended for production):
+> ```kotlin
+> // Gateway.createDirectOpenAIService(apiKey = BuildConfig.OPENAI_API_KEY)
+> ```
+
+### 3. Make chat requests
+
+You can now use the `openAIService` to make chat requests. For example:
+
+```kotlin
+val openAiMessages = messages.map {
+    ChatMessage(
+        role = if (it.isUser) Role.User else Role.Assistant,
+        content = it.text
+    )
+} + ChatMessage(role = Role.User, content = userInput)
+val request = ChatCompletionRequest(
+    model = ModelId("gpt-4o-mini"),
+    n = 1,
+    messages = openAiMessages
+)
+val response = openAIService.chatCompletion(request).choices.first().message.content!!
+```
+
+See
+the [App.kt sample](sample/kmp/composeApp/src/commonMain/kotlin/io/github/brahyam/gateway/kmpsample/App.kt)
+for a full working example, including Compose UI integration and error handling.
+
 ## ⭐️ Support
 
 Appreciate the project? Here's how you can help:
