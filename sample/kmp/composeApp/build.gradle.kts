@@ -1,11 +1,27 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     kotlin("multiplatform")
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.buildconfig)
+}
+
+buildConfig {
+    val localProperties = Properties().apply {
+        load(FileInputStream(File(rootProject.rootDir, "local.properties")))
+    }
+    buildConfigField(
+        "GOOGLE_CLOUD_PROJECT_NUMBER_STRING",
+        localProperties.getProperty("GOOGLE_CLOUD_PROJECT_NUMBER_STRING")
+    )
+    buildConfigField("OPENAI_API_KEY", localProperties.getProperty("OPENAI_API_KEY"))
+    buildConfigField("GATEWAY_SERVICE_URL", localProperties.getProperty("GATEWAY_SERVICE_URL"))
+    buildConfigField("GATEWAY_PARTIAL_KEY", localProperties.getProperty("GATEWAY_PARTIAL_KEY"))
 }
 
 kotlin {
@@ -42,6 +58,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(projects.gatewayClient)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

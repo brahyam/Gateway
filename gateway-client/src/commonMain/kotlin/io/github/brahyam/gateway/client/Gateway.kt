@@ -32,7 +32,7 @@ public object Gateway {
      * @param logLevel The minimum log level for logging (default: INFO)
      */
     public fun configure(
-        googleCloudProjectNumber: Long? = null,
+        googleCloudProjectNumber: Long,
         enableAnonymousId: Boolean = false,
         logger: Logger? = null,
         logLevel: LogLevel = LogLevel.INFO,
