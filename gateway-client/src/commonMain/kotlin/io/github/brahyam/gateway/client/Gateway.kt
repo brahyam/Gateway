@@ -22,6 +22,7 @@ public object Gateway {
     public const val VERSION: String = BuildConfig.GATEWAY_VERSION
     private var instance: GatewayImpl? = null
     public var logger: Logger = PrintlnLogger()
+    private var isConfigured: Boolean = false
 
     /**
      * Configure the Gateway client. This must be called before using any other Gateway functionality.
@@ -39,10 +40,25 @@ public object Gateway {
         logger: Logger? = null,
         logLevel: LogLevel = LogLevel.INFO,
     ) {
-        this.logger = logger ?: PrintlnLogger(logLevel)
-        this.instance = createGatewayImpl(googleCloudProjectNumber, enableAnonymousId)
-        CoroutineScope(Dispatchers.Default).launch {
-            instance?.warmUpAttestation()
+        try {
+            this.logger = logger ?: PrintlnLogger(logLevel)
+            this.instance = createGatewayImpl(googleCloudProjectNumber, enableAnonymousId)
+            isConfigured = true
+
+            // Warm up attestation in background - don't let failures crash the app
+            CoroutineScope(Dispatchers.Default).launch {
+                try {
+                    instance?.warmUpAttestation()
+                } catch (e: Exception) {
+                    this@Gateway.logger.error("Background attestation warm-up failed: ${e.message}")
+                }
+            }
+
+            this.logger.info("Gateway configured successfully")
+        } catch (e: Exception) {
+            this.logger.error("Failed to configure Gateway: ${e.message}")
+            // Mark as configured with fallback to prevent repeated configuration attempts
+            isConfigured = true
         }
     }
 
@@ -76,20 +92,32 @@ public object Gateway {
         engine: HttpClientEngine? = null,
         httpClientConfig: HttpClientConfig<*>.() -> Unit = {},
     ): OpenAIService {
-        checkConfigured()
-        val openAIConfig = OpenAIConfig(
-            token = apiKey,
-            logging = logging,
-            timeout = timeout,
-            organization = organization,
-            headers = headers,
-            host = host,
-            proxy = proxy,
-            retry = retry,
-            engine = engine,
-            httpClientConfig = httpClientConfig
-        )
-        return GatewayDirectOpenAIService(openAIConfig)
+        return try {
+            if (apiKey.isBlank()) {
+                logger.error("Empty API key provided to createDirectOpenAIService")
+                throw IllegalArgumentException("API key cannot be empty")
+            }
+
+            val openAIConfig = OpenAIConfig(
+                token = apiKey,
+                logging = logging,
+                timeout = timeout,
+                organization = organization,
+                headers = headers,
+                host = host,
+                proxy = proxy,
+                retry = retry,
+                engine = engine,
+                httpClientConfig = httpClientConfig
+            )
+
+            val service = GatewayDirectOpenAIService(openAIConfig)
+            logger.info("Direct OpenAI service created successfully")
+            service
+        } catch (e: Exception) {
+            logger.error("Failed to create direct OpenAI service: ${e.message}")
+            throw GatewayException("Failed to create direct OpenAI service", e)
+        }
     }
 
     /**
@@ -121,24 +149,86 @@ public object Gateway {
         retry: RetryStrategy = RetryStrategy(),
         enableCertPinning: Boolean = true,
     ): OpenAIService {
-        checkConfigured()
-        val openAIConfig = OpenAIConfig(
-            token = partialKey,
-            host = OpenAIHost("$serviceURL/v1/"),
-            engine = if (enableCertPinning) createPinnedEngine() else null,
-            logging = logging,
-            timeout = timeout,
-            organization = organization,
-            headers = headers,
-            proxy = proxy,
-            retry = retry
-        )
-        return GatewayOpenAIService(openAIConfig, instance!!)
+        return try {
+            checkConfigured()
+
+            if (partialKey.isBlank()) {
+                logger.error("Empty partial key provided to createOpenAIService")
+                throw IllegalArgumentException("Partial key cannot be empty")
+            }
+
+            if (serviceURL.isBlank()) {
+                logger.error("Empty service URL provided to createOpenAIService")
+                throw IllegalArgumentException("Service URL cannot be empty")
+            }
+
+            val currentInstance = instance
+            if (currentInstance == null) {
+                logger.error("Gateway instance is null - configuration may have failed")
+                throw IllegalStateException("Gateway instance unavailable")
+            }
+
+            val normalizedServiceURL =
+                if (serviceURL.endsWith("/")) serviceURL.dropLast(1) else serviceURL
+            val openAIConfig = OpenAIConfig(
+                token = partialKey,
+                host = OpenAIHost("${normalizedServiceURL}/v1/"),
+                engine = if (enableCertPinning) {
+                    try {
+                        createPinnedEngine()
+                    } catch (e: Exception) {
+                        logger.warn("Failed to create pinned engine: ${e.message}. Falling back to default engine.")
+                        null
+                    }
+                } else null,
+                logging = logging,
+                timeout = timeout,
+                organization = organization,
+                headers = headers,
+                proxy = proxy,
+                retry = retry
+            )
+
+            val service = GatewayOpenAIService(openAIConfig, currentInstance)
+            logger.info("Protected OpenAI service created successfully")
+            service
+        } catch (e: Exception) {
+            logger.error("Failed to create protected OpenAI service: ${e.message}")
+            throw GatewayException("Failed to create protected OpenAI service", e)
+        }
     }
 
     private fun checkConfigured() {
-        require(instance != null) {
-            "Gateway must be configured before use. Call Gateway.configure() first."
+        if (!isConfigured) {
+            val message = "Gateway must be configured before use. Call Gateway.configure() first."
+            logger.error(message)
+            throw IllegalStateException(message)
+        }
+    }
+
+    /**
+     * Check if the Gateway has been configured
+     */
+    public fun isConfigured(): Boolean = isConfigured
+
+    /**
+     * Reset the Gateway configuration (primarily for testing)
+     */
+    public fun reset() {
+        try {
+            instance = null
+            isConfigured = false
+            logger.info("Gateway reset successfully")
+        } catch (e: Exception) {
+            logger.error("Error resetting Gateway: ${e.message}")
         }
     }
 }
+
+/**
+ * Exception thrown by Gateway operations to wrap underlying errors
+ */
+public class GatewayException(
+    message: String,
+    cause: Throwable? = null,
+) : Exception(message, cause)

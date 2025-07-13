@@ -7,10 +7,6 @@ include(":openai-client-bom")
 
 include(":gateway-client")
 
-include(":sample:jvm")
-include(":sample:js")
-include(":sample:native")
-
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
