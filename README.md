@@ -1,29 +1,40 @@
 # Gateway AI Client
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.brahyam/gateway-client?color=blue&label=Download)](https://central.sonatype.com/namespace/io.github.brahyam)
-[![License](https://img.shields.io/github/license/brahyam/gateway-kmp?color=yellow)](LICENSE.md)
+![Maven Central Version](https://img.shields.io/maven-central/v/io.github.brahyam/gateway-client)
+![GitHub License](https://img.shields.io/github/license/brahyam/Gateway)
 [![Documentation](https://img.shields.io/badge/docs-api-a97bff.svg?logo=kotlin)](https://docs.meetgateway.com/)
 
-Android and iOS client for accessing different AI providers (OpenAI, Claude...) directly or with API
-key protection through [Gateway's servers](https://meetgateway.com/)
+Android and Kotlin Multiplatform (KMP) client for accessing different AI providers (OpenAI,
+Claude...) directly or with API key protection through [Gateway's servers](https://meetgateway.com/)
 
-## 📦 KMP (Kotlin Multiplatform) Setup
+## 📦 Android & Kotlin Multiplatform (KMP) Setup
 
-1. Add the Gateway AI Client to your **common** dependencies in your shared module's
-   `build.gradle.kts`:
+### 1. Add the Gateway AI Client dependency
+
+For **KMP projects**, add to your **commonMain** dependencies in your shared module's
+`build.gradle.kts`:
 
 ```kotlin
-dependencies {
-    implementation("io.github.brahyam:gateway-client:0.1.9")
+commonMain.dependencies {
+    implementation("io.github.brahyam:gateway-client:0.2.0")
 }
 ```
 
-2. Configure Gateway early in your **common code** (e.g., in your `RootComponent`, `MainViewModel`,
-   or shared initialization logic):
+For **Android-only projects**, add to your `build.gradle`:
+
+```kotlin
+dependencies {
+   implementation("io.github.brahyam:gateway-client:0.2.0")
+}
+```
+
+### 2. Configure Gateway early in your code (Only needed for Gateway-protected services)
+
+For **KMP**, configure Gateway in your shared code (e.g., `RootComponent`, `MainViewModel`, or app
+startup):
 
 ```kotlin
 import io.github.brahyam.gateway.client.Gateway
-import io.github.brahyam.gateway.client.GatewayConfig
 
 class RootComponent {
     init {
@@ -35,36 +46,15 @@ class RootComponent {
 }
 ```
 
-3. Create an instance of a service, e.g., OpenAI service, as shown in the Android section below. The
-   usage is the same across platforms.
-
----
-
-## 📦 Android Setup
-
-1. Add the Gateway AI Client to your `build.gradle` file:
-
-```groovy
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-   implementation "io.github.brahyam:gateway-client:0.1.9"
-}
-```
-
-2. Configure Gateway early in your **Android Application** class:
+For **Android**, configure Gateway in your `Application` class:
 
 ```kotlin
 import android.app.Application
 import io.github.brahyam.gateway.client.Gateway
-import io.github.brahyam.gateway.client.GatewayConfig
 
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        // Replace with your actual Google Cloud Project Number (see https://console.cloud.google.com/welcome)
         Gateway.configure(
             googleCloudProjectNumber = YOUR_GCP_PROJECT_NUMBER
         )
@@ -72,37 +62,36 @@ class MyApplication : Application() {
 }
 ```
 
-3. Create an instance of a service, e.g., OpenAI service:
+### 3. Create an OpenAI Service instance
 
-You can use either the direct (unprotected) service for development, or the Gateway-protected service for production. See the [sample app](sample/README.md) for a complete example.
+You can either call AI Services directly (not recommended for production as it exposes your API
+keys),
+or use the Gateway-protected service which offers:
 
-**Direct (Unprotected) OpenAI Service**
+- **Device attestation**: Ensures the request is coming from a genuine device.
+- **API key protection**: Hides your real API keys.
+- **Rate limiting**: Controls the number of requests based on IP/User.
+- **Certificate pinning**: Ensures secure communication with Gateway servers.
+- **Monitoring**: Tracks usage and performance.
 
-Use this for development. Requests go straight to the OpenAI API.
+**Direct (Unprotected!!) OpenAI Service**
 
 ```kotlin
-import io.github.brahyam.gateway.client.Gateway
-import io.github.brahyam.gateway.client.OpenAIService
-
-// ... inside your Activity or shared code ...
-
-val openAIService: OpenAIService = Gateway.createDirectOpenAIService(
+val openAIService = Gateway.createDirectOpenAIService(
    apiKey = "your-openai-api-key"
 )
 ```
 
 **Gateway-Protected OpenAI Service**
 
-Use this for production. Requests go through Gateway and are protected with device attestation, certificate pinning, API key protection, and rate limiting.
-
 ```kotlin
-val openAIService: OpenAIService = Gateway.createOpenAIService(
+val openAIService = Gateway.createOpenAIService(
     partialKey = "your-partial-key", // Get this from the Gateway dashboard
     serviceURL = "your-service-url"   // Get this from the Gateway dashboard
 )
 ```
 
-4. Use your `openAIService` to make API requests. [Learn more](guides/GettingStarted.md).
+### 4. Make API requests
 
 ```kotlin
 val response = openAIService.chatCompletion(
@@ -114,25 +103,10 @@ val response = openAIService.chatCompletion(
 println(response.choices[0].message.content)
 ```
 
-For a complete working example, check out the [sample app](sample/android/README.md).
+For a complete working example, check out the [sample/android](sample/android/)
+and [sample/kmp](sample/kmp/) folders.
 
-### OpenAI Service Supported features
-
-- [Models](guides/GettingStarted.md#models)
-- [Chat](guides/GettingStarted.md#chat)
-- [Images](guides/GettingStarted.md#images)
-- [Embeddings](guides/GettingStarted.md#embeddings)
-- [Files](guides/GettingStarted.md#files)
-- [Fine-tuning](guides/GettingStarted.md#fine-tuning)
-- [Moderations](guides/GettingStarted.md#moderations)
-- [Audio](guides/GettingStarted.md#audio)
-
-#### Beta
-
-- [Assistants](guides/GettingStarted.md#assistants)
-- [Threads](guides/GettingStarted.md#threads)
-- [Messages](guides/GettingStarted.md#messages)
-- [Runs](guides/GettingStarted.md#runs)
+---
 
 ## 📚 Guides
 
@@ -142,72 +116,6 @@ Get started and understand more about how to use OpenAI API client for Kotlin wi
 - [Chat & Function Call](guides/ChatToolCalls.md)
 - [FileSource Guide](guides/FileSource.md)
 - [Assistants](guides/Assistants.md)
-
-## ℹ️ Sample apps
-
-Sample apps are available under `sample`.
-
-## 🧩 Compose Multiplatform Sample Usage
-
-The [Compose Multiplatform sample](sample/kmp/composeApp/src/commonMain/kotlin/io/github/brahyam/gateway/kmpsample/App.kt)
-demonstrates how to use the Gateway AI Client in a shared Kotlin Multiplatform (KMP) UI targeting
-Android and iOS.
-
-### 1. Configure Gateway in shared code
-
-Configure Gateway early in your shared code (e.g., at app startup or before making API calls):
-
-```kotlin
-Gateway.configure(
-    googleCloudProjectNumber = BuildConfig.GOOGLE_CLOUD_PROJECT_NUMBER_STRING.toLong()
-)
-```
-
-- `BuildConfig.GOOGLE_CLOUD_PROJECT_NUMBER_STRING` should be set from your build configuration (see
-  sample for details).
-
-### 2. Create a Gateway-protected OpenAI service
-
-Use Gateway to create a protected OpenAI service instance:
-
-```kotlin
-val openAIService = Gateway.createOpenAIService(
-    serviceURL = BuildConfig.GATEWAY_SERVICE_URL,
-    partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
-)
-```
-
-- `BuildConfig.GATEWAY_SERVICE_URL` and `BuildConfig.GATEWAY_PARTIAL_KEY` are provided via your
-  build config or environment (see sample for setup).
-- This ensures requests are routed through Gateway with device attestation and API key protection.
-
-> **Note:** For development, you can use the direct OpenAI service (not recommended for production):
-> ```kotlin
-> // Gateway.createDirectOpenAIService(apiKey = BuildConfig.OPENAI_API_KEY)
-> ```
-
-### 3. Make chat requests
-
-You can now use the `openAIService` to make chat requests. For example:
-
-```kotlin
-val openAiMessages = messages.map {
-    ChatMessage(
-        role = if (it.isUser) Role.User else Role.Assistant,
-        content = it.text
-    )
-} + ChatMessage(role = Role.User, content = userInput)
-val request = ChatCompletionRequest(
-    model = ModelId("gpt-4o-mini"),
-    n = 1,
-    messages = openAiMessages
-)
-val response = openAIService.chatCompletion(request).choices.first().message.content!!
-```
-
-See
-the [App.kt sample](sample/kmp/composeApp/src/commonMain/kotlin/io/github/brahyam/gateway/kmpsample/App.kt)
-for a full working example, including Compose UI integration and error handling.
 
 ## ⭐️ Support
 
