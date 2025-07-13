@@ -1,6 +1,5 @@
 package io.github.brahyam.gateway.client
 
-import co.touchlab.skie.configuration.annotations.DefaultArgumentInterop
 import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAIConfig
@@ -32,8 +31,6 @@ public object Gateway {
      * @param logger Optional logger implementation. If null, uses a simple println logger.
      * @param logLevel The minimum log level for logging (default: INFO)
      */
-    @DefaultArgumentInterop.Enabled
-    @DefaultArgumentInterop.MaximumDefaultArgumentCount(6)
     public fun configure(
         googleCloudProjectNumber: Long? = null,
         enableAnonymousId: Boolean = false,
@@ -78,8 +75,6 @@ public object Gateway {
      * @param httpClientConfig additional custom client configuration
      * @return An OpenAI service instance
      */
-    @DefaultArgumentInterop.Enabled
-    @DefaultArgumentInterop.MaximumDefaultArgumentCount(12)
     public fun createDirectOpenAIService(
         apiKey: String,
         logging: LoggingConfig = LoggingConfig(),
@@ -136,8 +131,6 @@ public object Gateway {
      * @return A protected OpenAI service instance
      *
      */
-    @DefaultArgumentInterop.Enabled
-    @DefaultArgumentInterop.MaximumDefaultArgumentCount(12)
     public fun createOpenAIService(
         partialKey: String,
         serviceURL: String,

@@ -20,30 +20,19 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.android) apply false
-    alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.buildconfig) apply false
-    alias(libs.plugins.skie) apply false
     `maven-publish`
 }
 
 subprojects {
-    apply(plugin = "com.diffplug.spotless")
-    apply(plugin = "com.vanniktech.maven.publish")
-    apply(plugin = "maven-publish")
-
-    publishing {
-        repositories {
-            maven {
-                name = "githubPackages"
-                url = uri("https://maven.pkg.github.com/brahyam/Gateway")
-                // username and password (a personal Github access token) should be specified as
-                // `githubPackagesUsername` and `githubPackagesPassword` Gradle properties or alternatively
-                // as `ORG_GRADLE_PROJECT_githubPackagesUsername` and `ORG_GRADLE_PROJECT_githubPackagesPassword`
-                // environment variables
-                credentials(PasswordCredentials::class)
-            }
-        }
+    // Exclude sample/kmp/composeApp from publishing plugins and configuration
+    if (project.path != ":sample:kmp:composeApp") {
+        apply(plugin = "com.vanniktech.maven.publish")
+        apply(plugin = "maven-publish")
     }
+
+    apply(plugin = "com.diffplug.spotless")
 
     configure<SpotlessExtension> {
         kotlin {

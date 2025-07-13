@@ -2,7 +2,7 @@
 android-minSdk = "24"
 android-compileSdk = "35"
 android-targetSdk = "35"
-kotlin = "2.0.20"
+kotlin = "2.2.0"
 coroutines = "1.8.1"
 serialization = "1.7.3"
 ktor = "3.0.0"
@@ -17,7 +17,20 @@ lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
 composeBom = "2024.09.00"
 buildConfig = "5.6.6"
-skie = "0.10.2"
+dokka = "1.9.20"
+spotless = "6.25.0"
+vanniktechMavenPublish = "0.33.0"
+kotlinxBinaryCompatibilityValidator = "0.14.0"
+composeMultiplatform = "1.8.2"
+
+# kmp sample
+androidx-activity = "1.10.1"
+androidx-appcompat = "1.7.1"
+androidx-constraintlayout = "2.2.1"
+androidx-core = "1.16.0"
+androidx-espresso = "3.6.1"
+androidx-lifecycle = "2.9.1"
+androidx-testExt = "1.2.1"
 
 [libraries]
 # Coroutines
@@ -65,19 +78,24 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 
-# Interop
-skie-annotations = { group = "co.touchlab.skie", name = "configuration-annotations", version.ref = "skie" }
+# kmp sample
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
+androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout" }
+androidx-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 
 [plugins]
 kotlin-multiplaform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-kotlinx-binary-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version = "0.14.0" }
-maven-publish = { id = "com.vanniktech.maven.publish", version = "0.32.0" }
-spotless = { id = "com.diffplug.gradle.spotless", version = "6.25.0" }
-dokka = { id = "org.jetbrains.dokka", version = "1.9.20" }
+kotlinx-binary-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "kotlinxBinaryCompatibilityValidator" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktechMavenPublish" }
+spotless = { id = "com.diffplug.gradle.spotless", version.ref = "spotless" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildConfig" }
-skie = { id = "co.touchlab.skie", version.ref = "skie" }

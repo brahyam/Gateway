@@ -264,31 +264,4 @@ internal class IOSFallbackGatewayImpl(
     }
 }
 
-public fun Gateway.configureIOS() {
-    try {
-        this.configure(
-            googleCloudProjectNumber = null,
-            enableAnonymousId = false,
-            logger = null
-        )
-    } catch (e: Exception) {
-        this.logger.error("Failed to configure iOS Gateway: ${e.message}")
-        // Configuration errors are handled in the main configure method
-    }
-}
-
-public fun Gateway.configureIOS(enableAnonymousId: Boolean, logger: Logger?) {
-    try {
-        this.configure(
-            googleCloudProjectNumber = null,
-            enableAnonymousId = enableAnonymousId,
-            logger = logger
-        )
-    } catch (e: Exception) {
-        (logger
-            ?: this.logger).error("Failed to configure iOS Gateway with parameters: ${e.message}")
-        // Configuration errors are handled in the main configure method
-    }
-}
-
 internal actual fun getDeviceType(): String = "ios"

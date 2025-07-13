@@ -25,3 +25,4 @@ dependencyResolutionManagement {
     }
 }
 include(":sample:android")
+include(":sample:kmp:composeApp")
