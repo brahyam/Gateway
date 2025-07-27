@@ -7,6 +7,20 @@
 Android and Kotlin Multiplatform (KMP) client for accessing different AI providers (OpenAI,
 Claude...) directly or with API key protection through [Gateway's servers](https://meetgateway.com/)
 
+## 🚀 Supported Service Providers
+
+The `Gateway` client supports the following AI service providers (see [
+`Gateway.kt`](gateway-client/src/commonMain/kotlin/io/github/brahyam/gateway/client/Gateway.kt)):
+
+- **OpenAI**
+- **Google Gemini**
+- **Groq**
+- **Mistral AI**
+- **Together AI**
+- **Anthropic Claude**
+- **AI/ML API**
+- **Custom** (any compatible OpenAI-style API)
+
 ## 📦 Android & Kotlin Multiplatform (KMP) Setup
 
 ### 1. Add the Gateway AI Client dependency

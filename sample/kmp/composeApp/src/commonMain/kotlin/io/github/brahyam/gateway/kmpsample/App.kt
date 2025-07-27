@@ -33,6 +33,7 @@ import com.aallam.openai.api.core.Role
 import com.aallam.openai.api.model.ModelId
 import gateway_kmp.sample.kmp.composeApp.BuildConfig
 import io.github.brahyam.gateway.client.Gateway
+import io.github.brahyam.gateway.client.createOpenAIService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

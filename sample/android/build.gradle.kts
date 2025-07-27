@@ -40,6 +40,11 @@ android {
             "GATEWAY_SERVICE_URL",
             "\"${prop.getProperty("GATEWAY_SERVICE_URL")}\""
         )
+        buildConfigField(
+            "String",
+            "CLAUDE_API_KEY",
+            "\"${prop.getProperty("CLAUDE_API_KEY")}\""
+        )
     }
 
     buildTypes {

@@ -2,6 +2,7 @@ package io.github.brahyam.gateway.client
 
 import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.client.LoggingConfig
+import com.aallam.openai.client.OpenAI
 import com.aallam.openai.client.OpenAIConfig
 import com.aallam.openai.client.OpenAIHost
 import com.aallam.openai.client.ProxyConfig
@@ -59,81 +60,58 @@ public object Gateway {
         }
     }
 
+
     /**
-     * Get an unprotected OpenAI service instance for BYOK (Bring Your Own Key) use cases.
-     * This should only be used in development or when you want your users to add their own OpenAI API key.
-     *
-     * @param apiKey Your OpenAI API key
-     * @param logging client logging configuration
-     * @param timeout http client timeout
-     * @param organization OpenAI organization ID
-     * @param headers extra http headers
-     * @param host OpenAI host configuration
-     * @param proxy HTTP proxy configuration
-     * @param retry rate limit retry configuration
-     * @param engine explicit ktor engine for http requests
-     * @param httpClientConfig additional custom client configuration
-     * @return An OpenAI service instance
+     * Generic function to create unprotected AI service instances
      */
-    public fun createDirectOpenAIService(
+    internal inline fun <T : OpenAI> createDirectService(
         apiKey: String,
+        providerConfig: ServiceProviderConfig,
         logging: LoggingConfig = LoggingConfig(),
         timeout: Timeout = Timeout(socket = 30.seconds),
         organization: String? = null,
         headers: Map<String, String> = emptyMap(),
-        host: OpenAIHost = OpenAIHost.OpenAI,
         proxy: ProxyConfig? = null,
         retry: RetryStrategy = RetryStrategy(),
         engine: HttpClientEngine? = null,
-        httpClientConfig: HttpClientConfig<*>.() -> Unit = {},
-    ): OpenAIService {
+        noinline httpClientConfig: HttpClientConfig<*>.() -> Unit = {},
+        serviceFactory: (OpenAIConfig) -> T,
+    ): T {
         return try {
             if (apiKey.isBlank()) {
-                logger.error("Empty API key provided to createDirectOpenAIService")
+                logger.error("Empty API key provided to create${providerConfig.name}Service")
                 throw IllegalArgumentException("API key cannot be empty")
             }
 
             val openAIConfig = OpenAIConfig(
                 token = apiKey,
+                host = OpenAIHost("https://${providerConfig.proxyDomain}/"),
                 logging = logging,
                 timeout = timeout,
                 organization = organization,
                 headers = headers,
-                host = host,
                 proxy = proxy,
                 retry = retry,
                 engine = engine,
                 httpClientConfig = httpClientConfig
             )
 
-            val service = GatewayDirectOpenAIService(openAIConfig)
-            logger.info("Direct OpenAI service created successfully")
+            val service = serviceFactory(openAIConfig)
+            logger.info("Direct ${providerConfig.name} service created successfully")
             service
         } catch (e: Exception) {
-            logger.error("Failed to create direct OpenAI service: ${e.message}")
-            throw GatewayException("Failed to create direct OpenAI service", e)
+            logger.error("Failed to create direct ${providerConfig.name} service: ${e.message}")
+            throw GatewayException("Failed to create direct ${providerConfig.name} service", e)
         }
     }
 
     /**
-     * Get a protected OpenAI service instance for production use cases.
-     * This uses the Gateway's attestation and protection mechanisms.
-     *
-     * @param partialKey Partial key from your Gateway developer dashboard
-     * @param serviceURL Service URL from your Gateway developer dashboard
-     * @param logging Client logging configuration
-     * @param timeout HTTP client timeout
-     * @param organization OpenAI organization ID
-     * @param headers Extra HTTP headers
-     * @param proxy HTTP proxy configuration
-     * @param retry Rate limit retry configuration
-     * @param enableCertPinning Whether to enable certificate pinning
-     * @return A protected OpenAI service instance
-     *
+     * Generic function to create protected AI service instances
      */
-    public fun createOpenAIService(
+    internal inline fun <T : OpenAI> createProtectedService(
         partialKey: String,
         serviceURL: String,
+        providerConfig: ServiceProviderConfig,
         logging: LoggingConfig = LoggingConfig(),
         timeout: Timeout = Timeout(socket = 30.seconds),
         organization: String? = null,
@@ -141,17 +119,18 @@ public object Gateway {
         proxy: ProxyConfig? = null,
         retry: RetryStrategy = RetryStrategy(),
         enableCertPinning: Boolean = true,
-    ): OpenAIService {
+        serviceFactory: (OpenAIConfig, GatewayImpl) -> T,
+    ): T {
         return try {
             checkConfigured()
 
             if (partialKey.isBlank()) {
-                logger.error("Empty partial key provided to createOpenAIService")
+                logger.error("Empty partial key provided to create${providerConfig.name}Service")
                 throw IllegalArgumentException("Partial key cannot be empty")
             }
 
             if (serviceURL.isBlank()) {
-                logger.error("Empty service URL provided to createOpenAIService")
+                logger.error("Empty service URL provided to create${providerConfig.name}Service")
                 throw IllegalArgumentException("Service URL cannot be empty")
             }
 
@@ -182,12 +161,12 @@ public object Gateway {
                 retry = retry
             )
 
-            val service = GatewayOpenAIService(openAIConfig, currentInstance)
-            logger.info("Protected OpenAI service created successfully")
+            val service = serviceFactory(openAIConfig, currentInstance)
+            logger.info("Protected ${providerConfig.name} service created successfully")
             service
         } catch (e: Exception) {
-            logger.error("Failed to create protected OpenAI service: ${e.message}")
-            throw GatewayException("Failed to create protected OpenAI service", e)
+            logger.error("Failed to create protected ${providerConfig.name} service: ${e.message}")
+            throw GatewayException("Failed to create protected ${providerConfig.name} service", e)
         }
     }
 

@@ -6,26 +6,29 @@ import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.plugin
 
 /**
- * Interface for OpenAI service implementations.
+ * Configuration for AI service providers
  */
-public interface OpenAIService : OpenAI
-
-/**
- * Unprotected OpenAI service implementation for BYOK (Bring Your Own Key) use cases.
- */
-internal class GatewayDirectOpenAIService(
-    private val openAiConfig: OpenAIConfig,
-) : OpenAIService, OpenAI by OpenAI(
-    config = openAiConfig
+public data class ServiceProviderConfig(
+    val name: String,
+    val proxyDomain: String,
 )
 
 /**
- * Protected OpenAI service implementation that uses Gateway's attestation and protection mechanisms.
+ * Base class for unprotected AI service implementations
  */
-internal class GatewayOpenAIService(
-    private val openAiConfig: OpenAIConfig,
-    private val gatewayImpl: GatewayImpl,
-) : OpenAIService, OpenAI by OpenAI(
+internal abstract class BaseDirectService(
+    protected val openAiConfig: OpenAIConfig,
+    protected val providerConfig: ServiceProviderConfig,
+) : OpenAI by OpenAI(config = openAiConfig)
+
+/**
+ * Base class for protected AI service implementations with Gateway attestation
+ */
+internal abstract class BaseProtectedService(
+    protected val openAiConfig: OpenAIConfig,
+    protected val gatewayImpl: GatewayImpl,
+    protected val providerConfig: ServiceProviderConfig,
+) : OpenAI by OpenAI(
     config = openAiConfig,
     httpClientApplicator = {
         plugin(HttpSend).intercept { request ->
@@ -33,6 +36,7 @@ internal class GatewayOpenAIService(
             request.headers.append("gateway-integrity", integrityToken)
             request.headers.append("gateway-sdk-version", Gateway.VERSION)
             request.headers.append("gateway-device-type", getDeviceType())
+            request.headers.append("gateway-provider", providerConfig.name)
             // Add anonymous id header if enabled
             try {
                 val anonId = gatewayImpl.getAnonymousId()
@@ -46,4 +50,4 @@ internal class GatewayOpenAIService(
 )
 
 // Add expect function for device type
-internal expect fun getDeviceType(): String
+internal expect fun getDeviceType(): String 
