@@ -30,7 +30,7 @@ For **KMP projects**, add to your **commonMain** dependencies in your shared mod
 
 ```kotlin
 commonMain.dependencies {
-    implementation("io.github.brahyam:gateway-client:0.2.0")
+    implementation("io.github.brahyam:gateway-client:0.3.0")
 }
 ```
 
@@ -38,7 +38,7 @@ For **Android-only projects**, add to your `build.gradle`:
 
 ```kotlin
 dependencies {
-   implementation("io.github.brahyam:gateway-client:0.2.0")
+   implementation("io.github.brahyam:gateway-client:0.3.0")
 }
 ```
 
