@@ -1,12 +1,12 @@
 import org.jetbrains.kotlin.konan.target.HostManager
 
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.serialization")
-    id("com.vanniktech.maven.publish")
-    id("binary-compatibility-validator")
-    id("com.diffplug.spotless")
-    id("org.jetbrains.dokka")
+    alias(libs.plugins.kotlin.multiplaform)
+    alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.maven.publish)
+    alias(libs.plugins.kotlinx.binary.validator)
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.dokka)
     id("build-support")
 }
 

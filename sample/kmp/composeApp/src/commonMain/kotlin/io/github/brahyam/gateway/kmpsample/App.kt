@@ -48,7 +48,6 @@ fun App() {
         var messages by remember { mutableStateOf(listOf<ChatMessageUi>()) }
         var input by remember { mutableStateOf("") }
         var isLoading by remember { mutableStateOf(false) }
-        var error by remember { mutableStateOf<String?>(null) }
         val coroutineScope = remember { CoroutineScope(Dispatchers.Main) }
         val snackbarHostState = remember { SnackbarHostState() }
 
@@ -132,7 +131,6 @@ fun App() {
                                 messages = messages + ChatMessageUi(userInput, true)
                                 input = ""
                                 isLoading = true
-                                error = null
                                 coroutineScope.launch {
                                     try {
                                         val openAiMessages = messages.map {
@@ -150,7 +148,6 @@ fun App() {
                                             openAIService.chatCompletion(request).choices.first().message.content!!
                                         messages = messages + ChatMessageUi(response, false)
                                     } catch (e: Exception) {
-                                        error = e.message
                                         snackbarHostState.showSnackbar("Error: ${e.message}")
                                     } finally {
                                         isLoading = false
