@@ -18,7 +18,7 @@ public data class ImageCreationRequest(
     @SerialName("n") val n: Int? = null,
     @SerialName("size") val size: ImageSize? = null,
     @SerialName("user") val user: String? = null,
-    @SerialName("response_format") val responseFormat: ImageResponseFormat,
+    @SerialName("response_format") val responseFormat: ImageResponseFormat?,
     @SerialName("model") val model: String? = null,
     @SerialName("quality") val quality: Quality? = null,
     @SerialName("style") val style: Style? = null,

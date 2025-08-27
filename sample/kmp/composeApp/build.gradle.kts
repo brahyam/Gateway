@@ -59,6 +59,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(projects.gatewayClient)
+            implementation(libs.coil3.compose)
+            implementation(libs.coil3.network.ktor3)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

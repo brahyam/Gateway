@@ -2,16 +2,21 @@ package io.github.brahyam.gateway.kmpsample
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -26,28 +31,44 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import com.aallam.openai.api.chat.ChatCompletionChunk
 import com.aallam.openai.api.chat.ChatCompletionRequest
 import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.core.Role
+import com.aallam.openai.api.image.ImageCreation
+import com.aallam.openai.api.image.ImageSize
 import com.aallam.openai.api.model.ModelId
 import gateway_kmp.sample.kmp.composeApp.BuildConfig
 import io.github.brahyam.gateway.client.Gateway
 import io.github.brahyam.gateway.client.createOpenAIService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+data class ChatMessageUi(val text: String, val isUser: Boolean, val imageUrl: String? = null)
+
+enum class AIFunction(val displayName: String) {
+    NORMAL("Normal Chat"),
+    STREAMING("Stream Response"),
+    IMAGE("Create Image")
+}
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 @Preview
 fun App() {
     MaterialTheme {
-        data class ChatMessageUi(val text: String, val isUser: Boolean)
 
         var messages by remember { mutableStateOf(listOf<ChatMessageUi>()) }
         var input by remember { mutableStateOf("") }
         var isLoading by remember { mutableStateOf(false) }
+        var selectedFunction by remember { mutableStateOf(AIFunction.NORMAL) }
+        var streamingResponse by remember { mutableStateOf("") }
         val coroutineScope = remember { CoroutineScope(Dispatchers.Main) }
         val snackbarHostState = remember { SnackbarHostState() }
 
@@ -97,20 +118,85 @@ fun App() {
                                 color = if (msg.isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
                                 shape = MaterialTheme.shapes.medium,
                             ) {
-                                Text(
-                                    msg.text,
-                                    modifier = Modifier.padding(12.dp),
-                                    color = if (msg.isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
-                                )
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    if (msg.text.isNotEmpty()) {
+                                        Text(
+                                            msg.text,
+                                            color = if (msg.isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                    }
+                                    msg.imageUrl?.let { imageUrl ->
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        AsyncImage(
+                                            model = imageUrl,
+                                            contentDescription = msg.text,
+                                            modifier = Modifier
+                                                .size(200.dp)
+                                                .padding(4.dp),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
-                    if (isLoading) {
+
+                    // Show streaming response if in progress
+                    if (isLoading && selectedFunction == AIFunction.STREAMING && streamingResponse.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                shape = MaterialTheme.shapes.medium,
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        streamingResponse,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                            }
+                        }
+                    } else if (isLoading) {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Loading...", color = MaterialTheme.colorScheme.primary)
+                        Row(
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Loading...", color = MaterialTheme.colorScheme.primary)
+                        }
                     }
-                    // Error is now shown via Snackbar
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Filter chips for AI function selection
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    AIFunction.values().forEach { function ->
+                        FilterChip(
+                            onClick = { selectedFunction = function },
+                            label = { Text(function.displayName) },
+                            selected = selectedFunction == function
+                        )
+                    }
+                }
+                
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -131,26 +217,94 @@ fun App() {
                                 messages = messages + ChatMessageUi(userInput, true)
                                 input = ""
                                 isLoading = true
+                                streamingResponse = ""
+                                
                                 coroutineScope.launch {
                                     try {
-                                        val openAiMessages = messages.map {
-                                            ChatMessage(
-                                                role = if (it.isUser) Role.User else Role.Assistant,
-                                                content = it.text
-                                            )
-                                        } + ChatMessage(role = Role.User, content = userInput)
-                                        val request = ChatCompletionRequest(
-                                            model = ModelId("gpt-4o-mini"),
-                                            n = 1,
-                                            messages = openAiMessages
-                                        )
-                                        val response =
-                                            openAIService.chatCompletion(request).choices.first().message.content!!
-                                        messages = messages + ChatMessageUi(response, false)
+                                        when (selectedFunction) {
+                                            AIFunction.NORMAL -> {
+                                                val openAiMessages = messages.map {
+                                                    ChatMessage(
+                                                        role = if (it.isUser) Role.User else Role.Assistant,
+                                                        content = it.text
+                                                    )
+                                                } + ChatMessage(
+                                                    role = Role.User,
+                                                    content = userInput
+                                                )
+                                                val request = ChatCompletionRequest(
+                                                    model = ModelId("gpt-4o-mini"),
+                                                    n = 1,
+                                                    messages = openAiMessages
+                                                )
+                                                val response =
+                                                    openAIService.chatCompletion(request).choices.first().message.content!!
+                                                messages = messages + ChatMessageUi(response, false)
+                                            }
+
+                                            AIFunction.STREAMING -> {
+                                                val openAiMessages = messages.map {
+                                                    ChatMessage(
+                                                        role = if (it.isUser) Role.User else Role.Assistant,
+                                                        content = it.text
+                                                    )
+                                                } + ChatMessage(
+                                                    role = Role.User,
+                                                    content = userInput
+                                                )
+                                                val request = ChatCompletionRequest(
+                                                    model = ModelId("gpt-4o-mini"),
+                                                    n = 1,
+                                                    messages = openAiMessages
+                                                )
+                                                val completions: Flow<ChatCompletionChunk> =
+                                                    openAIService.chatCompletions(request)
+                                                var fullResponse = ""
+
+                                                completions.collect { chunk ->
+                                                    chunk.choices.firstOrNull()?.delta?.content?.let { content ->
+                                                        fullResponse += content
+                                                        streamingResponse = fullResponse
+                                                    }
+                                                }
+
+                                                if (fullResponse.isNotEmpty()) {
+                                                    messages = messages + ChatMessageUi(
+                                                        fullResponse,
+                                                        false
+                                                    )
+                                                }
+                                            }
+
+                                            AIFunction.IMAGE -> {
+                                                val imageCreation = ImageCreation(
+                                                    prompt = userInput,
+                                                    model = ModelId("gpt-image-1"),
+                                                    n = 1,
+                                                    size = ImageSize.is1024x1024,
+                                                    includeResponseFormat = false // only bc of gpt-image-1
+                                                )
+                                                val imageResponse =
+                                                    openAIService.imageJSON(imageCreation)
+                                                val imageData = imageResponse.firstOrNull()?.b64JSON
+                                                if (imageData != null) {
+                                                    val base64Image =
+                                                        "data:image/png;base64,$imageData"
+                                                    messages = messages + ChatMessageUi(
+                                                        "Generated image for: \"$userInput\"",
+                                                        false,
+                                                        base64Image
+                                                    )
+                                                } else {
+                                                    snackbarHostState.showSnackbar("Failed to generate image")
+                                                }
+                                            }
+                                        }
                                     } catch (e: Exception) {
                                         snackbarHostState.showSnackbar("Error: ${e.message}")
                                     } finally {
                                         isLoading = false
+                                        streamingResponse = ""
                                     }
                                 }
                             }

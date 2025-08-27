@@ -6,7 +6,7 @@ import com.aallam.openai.client.internal.createHttpClient
 import com.aallam.openai.client.internal.http.HttpTransport
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * OpenAI API.
@@ -32,7 +32,7 @@ public interface OpenAI : Completions, Files, Edits, Embeddings, Models, Moderat
 public fun OpenAI(
     token: String,
     logging: LoggingConfig = LoggingConfig(),
-    timeout: Timeout = Timeout(socket = 30.seconds),
+    timeout: Timeout = Timeout(socket = 3.minutes),
     organization: String? = null,
     headers: Map<String, String> = emptyMap(),
     host: OpenAIHost = OpenAIHost.OpenAI,

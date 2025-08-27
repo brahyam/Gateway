@@ -6,6 +6,7 @@ import com.aallam.openai.api.logging.Logger
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -26,14 +27,14 @@ import kotlin.time.Duration.Companion.seconds
 public class OpenAIConfig(
     public val token: String,
     public val logging: LoggingConfig = LoggingConfig(),
-    public val timeout: Timeout = Timeout(socket = 30.seconds),
+    public val timeout: Timeout = Timeout(socket = 3.minutes),
     public val organization: String? = null,
     public val headers: Map<String, String> = emptyMap(),
     public val host: OpenAIHost = OpenAIHost.OpenAI,
     public val proxy: ProxyConfig? = null,
     public val retry: RetryStrategy = RetryStrategy(),
     public val engine: HttpClientEngine? = null,
-    public val httpClientConfig: HttpClientConfig<*>.() -> Unit = {}
+    public val httpClientConfig: HttpClientConfig<*>.() -> Unit = {},
 ) {
 
     @Deprecated(
@@ -47,14 +48,14 @@ public class OpenAIConfig(
         token: String,
         logLevel: LogLevel = LogLevel.Headers,
         logger: Logger = Logger.Simple,
-        timeout: Timeout = Timeout(socket = 30.seconds),
+        timeout: Timeout = Timeout(socket = 3.minutes),
         organization: String? = null,
         headers: Map<String, String> = emptyMap(),
         host: OpenAIHost = OpenAIHost.OpenAI,
         proxy: ProxyConfig? = null,
         retry: RetryStrategy = RetryStrategy(),
         engine: HttpClientEngine? = null,
-        httpClientConfig: HttpClientConfig<*>.() -> Unit = {}
+        httpClientConfig: HttpClientConfig<*>.() -> Unit = {},
     ) : this(
         token = token,
         logging = LoggingConfig(

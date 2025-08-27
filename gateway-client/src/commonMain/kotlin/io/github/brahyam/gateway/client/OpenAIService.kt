@@ -9,7 +9,7 @@ import com.aallam.openai.client.ProxyConfig
 import com.aallam.openai.client.RetryStrategy
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Interface for OpenAI service implementations.
@@ -60,7 +60,7 @@ internal class GatewayOpenAIService(
 public fun Gateway.createDirectOpenAIService(
     apiKey: String,
     logging: LoggingConfig = LoggingConfig(),
-    timeout: Timeout = Timeout(socket = 30.seconds),
+    timeout: Timeout = Timeout(socket = 3.minutes),
     organization: String? = null,
     headers: Map<String, String> = emptyMap(),
     host: OpenAIHost = OpenAIHost.OpenAI,
@@ -117,7 +117,7 @@ public fun Gateway.createOpenAIService(
     partialKey: String,
     serviceURL: String,
     logging: LoggingConfig = LoggingConfig(),
-    timeout: Timeout = Timeout(socket = 30.seconds),
+    timeout: Timeout = Timeout(socket = 3.minutes),
     organization: String? = null,
     headers: Map<String, String> = emptyMap(),
     proxy: ProxyConfig? = null,

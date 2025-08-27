@@ -43,6 +43,12 @@ public class ImageCreation(
      * hyper-real looking images. This param is only supported for dall-e-3.
      */
     public val style: Style? = null,
+
+    /**
+     * Whether to include the response format in the request. Useful for image generation providers that support
+     * nullable response formats when a specific model is used. eg. OpenAI gpt-image-1
+     */
+    public val includeResponseFormat: Boolean = true,
 )
 
 /**
