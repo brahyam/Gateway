@@ -31,3 +31,4 @@ kotlin-js-store
 *.xcworkspace/
 .build/
 DerivedData/
+/CLAUDE.md

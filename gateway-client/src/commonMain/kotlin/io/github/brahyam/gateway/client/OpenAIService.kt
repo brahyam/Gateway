@@ -71,7 +71,7 @@ public fun Gateway.createDirectOpenAIService(
 ): OpenAIService {
     return try {
         if (apiKey.isBlank()) {
-            logger.error("Empty API key provided to createDirectOpenAIService")
+            log("Empty API key provided to createDirectOpenAIService")
             throw IllegalArgumentException("API key cannot be empty")
         }
 
@@ -89,10 +89,10 @@ public fun Gateway.createDirectOpenAIService(
         )
 
         val service = GatewayDirectOpenAIService(openAIConfig)
-        logger.info("Direct OpenAI service created successfully")
+        log("Direct OpenAI service created successfully")
         service
     } catch (e: Exception) {
-        logger.error("Failed to create direct OpenAI service: ${e.message}")
+        log("Failed to create direct OpenAI service: ${e.message}")
         throw GatewayException("Failed to create direct OpenAI service", e)
     }
 }

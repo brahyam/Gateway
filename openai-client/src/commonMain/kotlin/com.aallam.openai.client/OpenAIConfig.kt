@@ -153,3 +153,54 @@ public class LoggingConfig(
     public val logger: Logger = Logger.Simple,
     public val sanitize: Boolean = true,
 )
+
+/**
+ * Gemini client configuration.
+ *
+ * @param apiKey Gemini API key
+ * @param logging client logging configuration
+ * @param timeout http client timeout
+ * @param headers extra http headers
+ * @param host Gemini host configuration
+ * @param proxy HTTP proxy configuration
+ * @param retry rate limit retry configuration
+ * @param engine explicit ktor engine for http requests
+ * @param httpClientConfig additional custom client configuration
+ */
+public class GeminiConfig(
+    public val apiKey: String,
+    public val logging: LoggingConfig = LoggingConfig(),
+    public val timeout: Timeout = Timeout(socket = 3.minutes),
+    public val headers: Map<String, String> = emptyMap(),
+    public val host: GeminiHost = GeminiHost.Gemini,
+    public val proxy: ProxyConfig? = null,
+    public val retry: RetryStrategy = RetryStrategy(),
+    public val engine: HttpClientEngine? = null,
+    public val httpClientConfig: HttpClientConfig<*>.() -> Unit = {},
+)
+
+/**
+ * A class to configure the Gemini host.
+ * It provides a mechanism to customize the base URL and additional query parameters used in Gemini API requests.
+ */
+public class GeminiHost(
+    /**
+     * Base URL configuration.
+     * This is the root URL that will be used for all API requests to Gemini.
+     */
+    public val baseUrl: String,
+
+    /**
+     * Additional query parameters to be appended to all API requests to Gemini.
+     * These can be used to provide additional configuration or context for the API requests.
+     */
+    public val queryParams: Map<String, String> = emptyMap(),
+) {
+    public companion object {
+        /**
+         * A pre-configured instance of [GeminiHost] with the base URL set as `https://generativelanguage.googleapis.com`.
+         */
+        public val Gemini: GeminiHost =
+            GeminiHost(baseUrl = "https://generativelanguage.googleapis.com")
+    }
+}

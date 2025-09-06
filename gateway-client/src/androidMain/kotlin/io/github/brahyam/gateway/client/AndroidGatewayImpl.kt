@@ -35,7 +35,7 @@ internal actual fun createGatewayImpl(
             application.applicationContext
         )
     } catch (e: Exception) {
-        Gateway.logger.error("Failed to create AndroidGatewayImpl: ${e.message}")
+        Gateway.log("Failed to create AndroidGatewayImpl: ${e.message}")
         // Return a fallback implementation that doesn't crash
         FallbackGatewayImpl(enableAnonymousId)
     }
@@ -67,13 +67,13 @@ internal class AndroidGatewayImpl(
             if (integrityTokenProvider != null) return
 
             if (googleCloudProjectNumber == null) {
-                Gateway.logger.warn("Google Cloud Project Number not provided. Integrity attestation will be unavailable.")
+                Gateway.log("Google Cloud Project Number not provided. Integrity attestation will be unavailable.")
                 return
             }
 
             integrityTokenProvider = prepareTokenProviderWithRetry()
         } catch (e: Exception) {
-            Gateway.logger.error("Failed to warm up attestation: ${e.message}")
+            Gateway.log("Failed to warm up attestation: ${e.message}")
             // Don't throw - allow the app to continue without attestation
         }
     }
@@ -90,7 +90,7 @@ internal class AndroidGatewayImpl(
             }
             cachedAnonId = anonId
         } catch (e: Exception) {
-            Gateway.logger.error("Failed to initialize anonymous ID: ${e.message}")
+            Gateway.log("Failed to initialize anonymous ID: ${e.message}")
             // Generate a temporary ID for this session
             cachedAnonId = UUID.randomUUID().toString()
         }
@@ -104,7 +104,7 @@ internal class AndroidGatewayImpl(
                 run breaking@{
                     repeat(maxRetries) { attempt ->
                         try {
-                            Gateway.logger.debug("Preparing Integrity Token Provider (attempt ${attempt + 1}/$maxRetries)...")
+                            Gateway.log("Preparing Integrity Token Provider (attempt ${attempt + 1}/$maxRetries)...")
 
                             val result = withTimeoutOrNull(operationTimeoutMs) {
                                 val integrityManager =
@@ -116,7 +116,7 @@ internal class AndroidGatewayImpl(
                                 suspendCancellableCoroutine<StandardIntegrityTokenProvider> { continuation ->
                                     integrityManager.prepareIntegrityToken(request)
                                         .addOnSuccessListener { provider ->
-                                            Gateway.logger.info("Prepared Integrity Token Provider successfully on attempt ${attempt + 1}.")
+                                            Gateway.log("Prepared Integrity Token Provider successfully on attempt ${attempt + 1}.")
                                             continuation.resume(provider)
                                         }
                                         .addOnFailureListener { exception ->
@@ -132,7 +132,7 @@ internal class AndroidGatewayImpl(
                             }
                         } catch (exception: Exception) {
                             lastException = exception
-                            Gateway.logger.warn("Failed to prepare Integrity Token Provider on attempt ${attempt + 1}: ${exception.message}")
+                            Gateway.log("Failed to prepare Integrity Token Provider on attempt ${attempt + 1}: ${exception.message}")
 
                             // Check if this is a retryable error
                             if (!isRetryableError(exception) || attempt == maxRetries - 1) {
@@ -141,17 +141,17 @@ internal class AndroidGatewayImpl(
 
                             // Calculate delay with exponential backoff and jitter
                             val delay = calculateBackoffDelay(attempt)
-                            Gateway.logger.debug("Retrying in ${delay}ms...")
+                            Gateway.log("Retrying in ${delay}ms...")
                             delay(delay)
                         }
                     }
                 }
 
-                Gateway.logger.error("Failed to prepare Integrity Token Provider after $maxRetries attempts: ${lastException?.message}")
+                Gateway.log("Failed to prepare Integrity Token Provider after $maxRetries attempts: ${lastException?.message}")
                 null // Return null instead of throwing
             }
         } catch (e: Exception) {
-            Gateway.logger.error("Unexpected error preparing Integrity Token Provider: ${e.message}")
+            Gateway.log("Unexpected error preparing Integrity Token Provider: ${e.message}")
             null
         }
     }
@@ -160,13 +160,13 @@ internal class AndroidGatewayImpl(
         return try {
             val tokenProvider = integrityTokenProvider
             if (tokenProvider == null) {
-                Gateway.logger.warn("Integrity Token Provider not available. Returning empty token.")
+                Gateway.log("Integrity Token Provider not available. Returning empty token.")
                 return ""
             }
 
             requestIntegrityTokenWithRetry(tokenProvider) ?: ""
         } catch (e: Exception) {
-            Gateway.logger.error("Failed to get integrity token: ${e.message}")
+            Gateway.log("Failed to get integrity token: ${e.message}")
             "" // Return empty string instead of throwing
         }
     }
@@ -179,7 +179,7 @@ internal class AndroidGatewayImpl(
                 run breaking@{
                     repeat(maxRetries) { attempt ->
                         try {
-                            Gateway.logger.debug("Requesting Integrity Token (attempt ${attempt + 1}/$maxRetries)...")
+                            Gateway.log("Requesting Integrity Token (attempt ${attempt + 1}/$maxRetries)...")
 
                             val result = withTimeoutOrNull(operationTimeoutMs) {
                                 suspendCancellableCoroutine<String> { continuation ->
@@ -187,7 +187,7 @@ internal class AndroidGatewayImpl(
                                         StandardIntegrityTokenRequest.builder().build()
                                     )
                                         .addOnSuccessListener { response ->
-                                            Gateway.logger.info("Successfully requested Integrity Token on attempt ${attempt + 1}.")
+                                            Gateway.log("Successfully requested Integrity Token on attempt ${attempt + 1}.")
                                             continuation.resume(response.token())
                                         }
                                         .addOnFailureListener { exception ->
@@ -203,17 +203,17 @@ internal class AndroidGatewayImpl(
                             }
                         } catch (exception: Exception) {
                             lastException = exception
-                            Gateway.logger.warn("Failed to request Integrity Token on attempt ${attempt + 1}: ${exception.message}")
+                            Gateway.log("Failed to request Integrity Token on attempt ${attempt + 1}: ${exception.message}")
 
                             // Handle specific error code -19 (provider invalid) by re-initializing
                             if (exception is StandardIntegrityException && exception.errorCode == -19) {
-                                Gateway.logger.warn("Integrity Token Provider invalid, re-initializing...")
+                                Gateway.log("Integrity Token Provider invalid, re-initializing...")
                                 try {
                                     integrityTokenProvider = prepareTokenProviderWithRetry()
                                     // Continue with the retry loop using the new provider
                                     return@repeat
                                 } catch (reinitException: Exception) {
-                                    Gateway.logger.error("Failed to re-initialize Integrity Token Provider: ${reinitException.message}")
+                                    Gateway.log("Failed to re-initialize Integrity Token Provider: ${reinitException.message}")
                                     return@breaking
                                 }
                             }
@@ -225,17 +225,17 @@ internal class AndroidGatewayImpl(
 
                             // Calculate delay with exponential backoff and jitter
                             val delay = calculateBackoffDelay(attempt)
-                            Gateway.logger.debug("Retrying in ${delay}ms...")
+                            Gateway.log("Retrying in ${delay}ms...")
                             delay(delay)
                         }
                     }
                 }
 
-                Gateway.logger.error("Failed to request Integrity Token after $maxRetries attempts: ${lastException?.message}")
+                Gateway.log("Failed to request Integrity Token after $maxRetries attempts: ${lastException?.message}")
                 null // Return null instead of throwing
             }
         } catch (e: Exception) {
-            Gateway.logger.error("Unexpected error requesting Integrity Token: ${e.message}")
+            Gateway.log("Unexpected error requesting Integrity Token: ${e.message}")
             null
         }
     }
@@ -271,7 +271,7 @@ internal class AndroidGatewayImpl(
             val jitter = (cappedDelay * 0.25 * (Random.nextDouble() - 0.5)).toLong()
             cappedDelay + jitter
         } catch (e: Exception) {
-            Gateway.logger.error("Error calculating backoff delay: ${e.message}")
+            Gateway.log("Error calculating backoff delay: ${e.message}")
             baseDelayMs // Return base delay as fallback
         }
     }
@@ -279,16 +279,16 @@ internal class AndroidGatewayImpl(
     override suspend fun getAnonymousId(): String {
         return try {
             if (!enableAnonymousId) {
-                Gateway.logger.warn("Anonymous ID not enabled in config")
+                Gateway.log("Anonymous ID not enabled in config")
                 return ""
             }
 
             cachedAnonId ?: prefs.getString(ANON_ID_KEY, null) ?: run {
-                Gateway.logger.warn("Anonymous ID not initialized. Generating temporary ID.")
+                Gateway.log("Anonymous ID not initialized. Generating temporary ID.")
                 UUID.randomUUID().toString()
             }
         } catch (e: Exception) {
-            Gateway.logger.error("Failed to get anonymous ID: ${e.message}")
+            Gateway.log("Failed to get anonymous ID: ${e.message}")
             UUID.randomUUID().toString() // Return temporary ID instead of throwing
         }
     }
@@ -307,26 +307,26 @@ internal class FallbackGatewayImpl(
             if (enableAnonymousId) {
                 fallbackAnonId = UUID.randomUUID().toString()
             }
-            Gateway.logger.warn("Using fallback implementation - attestation features unavailable")
+            Gateway.log("Using fallback implementation - attestation features unavailable")
         } catch (e: Exception) {
-            Gateway.logger.error("Error in fallback warm up: ${e.message}")
+            Gateway.log("Error in fallback warm up: ${e.message}")
         }
     }
 
     override suspend fun getIntegrityToken(): String {
-        Gateway.logger.warn("Integrity token unavailable in fallback mode")
+        Gateway.log("Integrity token unavailable in fallback mode")
         return ""
     }
 
     override suspend fun getAnonymousId(): String {
         return try {
             if (!enableAnonymousId) {
-                Gateway.logger.warn("Anonymous ID not enabled in config")
+                Gateway.log("Anonymous ID not enabled in config")
                 return ""
             }
             fallbackAnonId ?: UUID.randomUUID().toString().also { fallbackAnonId = it }
         } catch (e: Exception) {
-            Gateway.logger.error("Error getting anonymous ID in fallback mode: ${e.message}")
+            Gateway.log("Error getting anonymous ID in fallback mode: ${e.message}")
             UUID.randomUUID().toString()
         }
     }

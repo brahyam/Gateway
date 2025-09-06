@@ -1,19 +1,53 @@
 package io.github.brahyam.gateway.client
 
 import com.aallam.openai.api.http.Timeout
+import com.aallam.openai.client.Assistants
+import com.aallam.openai.client.Audio
+import com.aallam.openai.client.Batch
+import com.aallam.openai.client.Chat
+import com.aallam.openai.client.Completions
+import com.aallam.openai.client.Edits
+import com.aallam.openai.client.Embeddings
+import com.aallam.openai.client.Files
+import com.aallam.openai.client.FineTunes
+import com.aallam.openai.client.FineTuning
+import com.aallam.openai.client.GeminiImages
 import com.aallam.openai.client.LoggingConfig
-import com.aallam.openai.client.OpenAI
+import com.aallam.openai.client.Messages
+import com.aallam.openai.client.Models
+import com.aallam.openai.client.Moderations
 import com.aallam.openai.client.OpenAIConfig
 import com.aallam.openai.client.ProxyConfig
 import com.aallam.openai.client.RetryStrategy
+import com.aallam.openai.client.Runs
+import com.aallam.openai.client.Threads
+import com.aallam.openai.client.VectorStores
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
 import kotlin.time.Duration.Companion.seconds
 
 /**
  * Interface for Google Gemini service implementations.
+ * This implements individual OpenAI interfaces (excluding Images) and adds Gemini-specific image generation capabilities.
  */
-public interface GeminiService : OpenAI
+public interface GeminiService :
+    Audio,
+    Assistants,
+    Batch,
+    Chat,
+    Completions,
+    Edits,
+    Embeddings,
+    Files,
+    FineTunes,
+    FineTuning,
+    Messages,
+    Models,
+    Moderations,
+    Runs,
+    Threads,
+    VectorStores,
+    GeminiImages
 
 /**
  * Google Gemini service provider configuration
@@ -30,7 +64,25 @@ public object GeminiProvider {
  */
 internal class GatewayDirectGeminiService(
     openAiConfig: OpenAIConfig,
-) : BaseDirectService(openAiConfig, GeminiProvider.CONFIG), GeminiService
+) : BaseDirectService(openAiConfig, GeminiProvider.CONFIG), GeminiService {
+
+    private val geminiClient by lazy {
+        com.aallam.openai.client.Gemini(
+            apiKey = openAiConfig.token,
+            logging = openAiConfig.logging,
+            timeout = openAiConfig.timeout,
+            headers = openAiConfig.headers,
+            proxy = openAiConfig.proxy,
+            retry = openAiConfig.retry,
+            httpClientConfig = openAiConfig.httpClientConfig
+        )
+    }
+
+    override suspend fun generateImages(
+        generation: com.aallam.openai.api.image.GeminiImageGeneration,
+        requestOptions: com.aallam.openai.api.core.RequestOptions?,
+    ) = geminiClient.generateImages(generation, requestOptions)
+}
 
 /**
  * Protected Google Gemini service implementation that uses Gateway's attestation and protection mechanisms.
@@ -38,7 +90,25 @@ internal class GatewayDirectGeminiService(
 internal class GatewayGeminiService(
     openAiConfig: OpenAIConfig,
     gatewayImpl: GatewayImpl,
-) : BaseProtectedService(openAiConfig, gatewayImpl, GeminiProvider.CONFIG), GeminiService
+) : BaseProtectedService(openAiConfig, gatewayImpl, GeminiProvider.CONFIG), GeminiService {
+
+    private val geminiClient by lazy {
+        com.aallam.openai.client.Gemini(
+            apiKey = openAiConfig.token,
+            logging = openAiConfig.logging,
+            timeout = openAiConfig.timeout,
+            headers = openAiConfig.headers,
+            proxy = openAiConfig.proxy,
+            retry = openAiConfig.retry,
+            httpClientConfig = openAiConfig.httpClientConfig
+        )
+    }
+
+    override suspend fun generateImages(
+        generation: com.aallam.openai.api.image.GeminiImageGeneration,
+        requestOptions: com.aallam.openai.api.core.RequestOptions?,
+    ) = geminiClient.generateImages(generation, requestOptions)
+}
 
 /**
  * Get an unprotected Google Gemini service instance for BYOK (Bring Your Own Key) use cases.

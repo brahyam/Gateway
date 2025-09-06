@@ -20,6 +20,7 @@ buildConfig {
         localProperties.getProperty("GOOGLE_CLOUD_PROJECT_NUMBER_STRING")
     )
     buildConfigField("OPENAI_API_KEY", localProperties.getProperty("OPENAI_API_KEY"))
+    buildConfigField("GEMINI_API_KEY", localProperties.getProperty("GEMINI_API_KEY"))
     buildConfigField("GATEWAY_SERVICE_URL", localProperties.getProperty("GATEWAY_SERVICE_URL"))
     buildConfigField("GATEWAY_PARTIAL_KEY", localProperties.getProperty("GATEWAY_PARTIAL_KEY"))
 }
@@ -28,7 +29,7 @@ kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
     }
 
@@ -90,8 +91,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 }
 

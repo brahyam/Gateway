@@ -1,6 +1,8 @@
 package io.github.brahyam.gateway.client
 
 import com.aallam.openai.api.http.Timeout
+import com.aallam.openai.api.logging.LogLevel
+import com.aallam.openai.api.logging.Logger
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAI
 import com.aallam.openai.client.OpenAIConfig
@@ -21,25 +23,33 @@ import kotlin.time.Duration.Companion.seconds
 public object Gateway {
     public const val VERSION: String = BuildConfig.GATEWAY_VERSION
     private var instance: GatewayImpl? = null
-    public var logger: Logger = PrintlnLogger()
+    public var logger: Logger = Logger.Simple
     private var isConfigured: Boolean = false
+
+    internal fun log(message: String) {
+        when (logger) {
+            Logger.Simple -> println("[Gateway] $message")
+            Logger.Default -> println("[Gateway] $message")
+            Logger.Empty -> {} // No logging
+        }
+    }
 
     /**
      * Configure the Gateway client. This must be called before using any other Gateway functionality.
      *
      * @param googleCloudProjectNumber The Google Cloud Project Number (Android only, nullable for iOS)
      * @param enableAnonymousId Whether to enable anonymous ID support
-     * @param logger Optional logger implementation. If null, uses a simple println logger.
-     * @param logLevel The minimum log level for logging (default: INFO)
+     * @param logger Optional logger implementation. If null, uses Logger.Simple.
+     * @param logLevel The minimum log level for logging (default: LogLevel.Info)
      */
     public fun configure(
         googleCloudProjectNumber: Long,
         enableAnonymousId: Boolean = false,
         logger: Logger? = null,
-        logLevel: LogLevel = LogLevel.INFO,
+        logLevel: LogLevel = LogLevel.Info,
     ) {
         try {
-            this.logger = logger ?: PrintlnLogger(logLevel)
+            this.logger = logger ?: Logger.Simple
             this.instance = createGatewayImpl(googleCloudProjectNumber, enableAnonymousId)
             isConfigured = true
 
@@ -48,13 +58,13 @@ public object Gateway {
                 try {
                     instance?.warmUpAttestation()
                 } catch (e: Exception) {
-                    this@Gateway.logger.error("Background attestation warm-up failed: ${e.message}")
+                    log("Background attestation warm-up failed: ${e.message}")
                 }
             }
 
-            this.logger.info("Gateway configured successfully")
+            log("Gateway configured successfully")
         } catch (e: Exception) {
-            this.logger.error("Failed to configure Gateway: ${e.message}")
+            log("Failed to configure Gateway: ${e.message}")
             // Mark as configured with fallback to prevent repeated configuration attempts
             isConfigured = true
         }
@@ -79,7 +89,7 @@ public object Gateway {
     ): T {
         return try {
             if (apiKey.isBlank()) {
-                logger.error("Empty API key provided to create${providerConfig.name}Service")
+                log("Empty API key provided to create${providerConfig.name}Service")
                 throw IllegalArgumentException("API key cannot be empty")
             }
 
@@ -97,10 +107,10 @@ public object Gateway {
             )
 
             val service = serviceFactory(openAIConfig)
-            logger.info("Direct ${providerConfig.name} service created successfully")
+            log("Direct ${providerConfig.name} service created successfully")
             service
         } catch (e: Exception) {
-            logger.error("Failed to create direct ${providerConfig.name} service: ${e.message}")
+            log("Failed to create direct ${providerConfig.name} service: ${e.message}")
             throw GatewayException("Failed to create direct ${providerConfig.name} service", e)
         }
     }
@@ -125,18 +135,18 @@ public object Gateway {
             checkConfigured()
 
             if (partialKey.isBlank()) {
-                logger.error("Empty partial key provided to create${providerConfig.name}Service")
+                log("Empty partial key provided to create${providerConfig.name}Service")
                 throw IllegalArgumentException("Partial key cannot be empty")
             }
 
             if (serviceURL.isBlank()) {
-                logger.error("Empty service URL provided to create${providerConfig.name}Service")
+                log("Empty service URL provided to create${providerConfig.name}Service")
                 throw IllegalArgumentException("Service URL cannot be empty")
             }
 
             val currentInstance = instance
             if (currentInstance == null) {
-                logger.error("Gateway instance is null - configuration may have failed")
+                log("Gateway instance is null - configuration may have failed")
                 throw IllegalStateException("Gateway instance unavailable")
             }
 
@@ -149,7 +159,7 @@ public object Gateway {
                     try {
                         createPinnedEngine()
                     } catch (e: Exception) {
-                        logger.warn("Failed to create pinned engine: ${e.message}. Falling back to default engine.")
+                        log("Failed to create pinned engine: ${e.message}. Falling back to default engine.")
                         null
                     }
                 } else null,
@@ -162,10 +172,10 @@ public object Gateway {
             )
 
             val service = serviceFactory(openAIConfig, currentInstance)
-            logger.info("Protected ${providerConfig.name} service created successfully")
+            log("Protected ${providerConfig.name} service created successfully")
             service
         } catch (e: Exception) {
-            logger.error("Failed to create protected ${providerConfig.name} service: ${e.message}")
+            log("Failed to create protected ${providerConfig.name} service: ${e.message}")
             throw GatewayException("Failed to create protected ${providerConfig.name} service", e)
         }
     }
@@ -173,7 +183,7 @@ public object Gateway {
     private fun checkConfigured() {
         if (!isConfigured) {
             val message = "Gateway must be configured before use. Call Gateway.configure() first."
-            logger.error(message)
+            log(message)
             throw IllegalStateException(message)
         }
     }
@@ -190,9 +200,9 @@ public object Gateway {
         try {
             instance = null
             isConfigured = false
-            logger.info("Gateway reset successfully")
+            log("Gateway reset successfully")
         } catch (e: Exception) {
-            logger.error("Error resetting Gateway: ${e.message}")
+            log("Error resetting Gateway: ${e.message}")
         }
     }
 }

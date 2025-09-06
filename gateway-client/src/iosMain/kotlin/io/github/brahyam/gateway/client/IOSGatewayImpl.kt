@@ -20,7 +20,7 @@ internal actual fun createGatewayImpl(
     return try {
         IOSGatewayImpl(enableAnonymousId)
     } catch (e: Exception) {
-        Gateway.logger.error("Failed to create IOSGatewayImpl: ${e.message}")
+        Gateway.log("Failed to create IOSGatewayImpl: ${e.message}")
         // Return a fallback implementation that doesn't crash
         IOSFallbackGatewayImpl(enableAnonymousId)
     }
@@ -39,9 +39,9 @@ internal class IOSGatewayImpl(
             }
             // iOS DCDevice doesn't require warm-up like Android's Integrity API
             // The device token is available immediately
-            Gateway.logger.info("iOS attestation warmed up successfully")
+            Gateway.log("iOS attestation warmed up successfully")
         } catch (e: Exception) {
-            Gateway.logger.error("Failed to warm up iOS attestation: ${e.message}")
+            Gateway.log("Failed to warm up iOS attestation: ${e.message}")
             // Don't throw - allow the app to continue without attestation
         }
     }
@@ -57,12 +57,12 @@ internal class IOSGatewayImpl(
             }
             cachedAnonId = anonId
         } catch (e: Exception) {
-            Gateway.logger.error("Failed to initialize anonymous ID: ${e.message}")
+            Gateway.log("Failed to initialize anonymous ID: ${e.message}")
             // Generate a temporary ID for this session
             cachedAnonId = try {
                 NSUUID().UUIDString
             } catch (uuidError: Exception) {
-                Gateway.logger.error("Failed to generate UUID: ${uuidError.message}")
+                Gateway.log("Failed to generate UUID: ${uuidError.message}")
                 "temp-${getTimeMillis()}"
             }
         }
@@ -70,18 +70,18 @@ internal class IOSGatewayImpl(
 
     override suspend fun getIntegrityToken(): String {
         return try {
-            Gateway.logger.debug("Entering getIntegrityToken() - Requesting iOS Device Check Token...")
+            Gateway.log("Entering getIntegrityToken() - Requesting iOS Device Check Token...")
 
             // Simulator detection with error handling
             val deviceInfo = getDeviceInfo()
             if (deviceInfo.isSimulator || !deviceInfo.isSupported) {
-                Gateway.logger.warn("Running on Simulator or unsupported device (${deviceInfo.model}) - returning dummy Device Check token.")
+                Gateway.log("Running on Simulator or unsupported device (${deviceInfo.model}) - returning dummy Device Check token.")
                 return "DUMMY_TOKEN"
             }
 
             generateDeviceCheckToken() ?: ""
         } catch (e: Exception) {
-            Gateway.logger.error("Failed to get iOS integrity token: ${e.message}")
+            Gateway.log("Failed to get iOS integrity token: ${e.message}")
             "" // Return empty string instead of throwing
         }
     }
@@ -99,14 +99,14 @@ internal class IOSGatewayImpl(
             val isSupported = try {
                 DCDevice.currentDevice.isSupported()
             } catch (e: Exception) {
-                Gateway.logger.warn("Failed to check device support: ${e.message}")
+                Gateway.log("Failed to check device support: ${e.message}")
                 false
             }
 
-            Gateway.logger.debug("Device model: $device, isSimulator: $isSimulator, isSupported: $isSupported")
+            Gateway.log("Device model: $device, isSimulator: $isSimulator, isSupported: $isSupported")
             DeviceInfo(device, isSimulator, isSupported)
         } catch (e: Exception) {
-            Gateway.logger.error("Failed to get device info: ${e.message}")
+            Gateway.log("Failed to get device info: ${e.message}")
             DeviceInfo(
                 model = "Unknown",
                 isSimulator = true,
@@ -125,7 +125,7 @@ internal class IOSGatewayImpl(
                                 try {
                                     if (error != null) {
                                         val nsError = error
-                                        Gateway.logger.error("Error generating iOS Device Check token: ${nsError.localizedDescription}")
+                                        Gateway.log("Error generating iOS Device Check token: ${nsError.localizedDescription}")
                                         continuation.resumeWithException(
                                             RuntimeException(
                                                 "Failed to generate iOS Device Check token: ${nsError.localizedDescription}",
@@ -133,13 +133,13 @@ internal class IOSGatewayImpl(
                                             )
                                         )
                                     } else if (token != null) {
-                                        Gateway.logger.info("Successfully generated iOS Device Check Token.")
+                                        Gateway.log("Successfully generated iOS Device Check Token.")
                                         try {
                                             // Convert the token data to base64 string
                                             val tokenString = token.base64Encoding()
                                             continuation.resume(tokenString)
                                         } catch (encodingError: Exception) {
-                                            Gateway.logger.error("Failed to encode token: ${encodingError.message}")
+                                            Gateway.log("Failed to encode token: ${encodingError.message}")
                                             continuation.resumeWithException(
                                                 RuntimeException(
                                                     "Failed to encode Device Check token",
@@ -148,13 +148,13 @@ internal class IOSGatewayImpl(
                                             )
                                         }
                                     } else {
-                                        Gateway.logger.error("iOS Device Check token generation returned null (no token, no error)")
+                                        Gateway.log("iOS Device Check token generation returned null (no token, no error)")
                                         continuation.resumeWithException(
                                             RuntimeException("iOS Device Check token generation returned null")
                                         )
                                     }
                                 } catch (handlerError: Exception) {
-                                    Gateway.logger.error("Error in completion handler: ${handlerError.message}")
+                                    Gateway.log("Error in completion handler: ${handlerError.message}")
                                     continuation.resumeWithException(
                                         RuntimeException(
                                             "Error in completion handler",
@@ -164,19 +164,19 @@ internal class IOSGatewayImpl(
                                 }
                             }
                         } catch (generateError: Exception) {
-                            Gateway.logger.error("Failed to start token generation: ${generateError.message}")
+                            Gateway.log("Failed to start token generation: ${generateError.message}")
                             continuation.resumeWithException(
                                 RuntimeException("Failed to start token generation", generateError)
                             )
                         }
                     }
                 } ?: run {
-                    Gateway.logger.error("Device Check token generation timed out")
+                    Gateway.log("Device Check token generation timed out")
                     throw RuntimeException("Device Check token generation timed out")
                 }
             }
         } catch (e: Exception) {
-            Gateway.logger.error("Unexpected error generating Device Check token: ${e.message}")
+            Gateway.log("Unexpected error generating Device Check token: ${e.message}")
             null
         }
     }
@@ -184,32 +184,32 @@ internal class IOSGatewayImpl(
     override suspend fun getAnonymousId(): String {
         return try {
             if (!enableAnonymousId) {
-                Gateway.logger.warn("Anonymous ID not enabled in config")
+                Gateway.log("Anonymous ID not enabled in config")
                 return ""
             }
 
             cachedAnonId ?: run {
                 try {
                     NSUserDefaults.standardUserDefaults.stringForKey("gateway_anon_id") ?: run {
-                        Gateway.logger.warn("Anonymous ID not initialized. Generating temporary ID.")
+                        Gateway.log("Anonymous ID not initialized. Generating temporary ID.")
                         NSUUID().UUIDString
                     }
                 } catch (e: Exception) {
-                    Gateway.logger.error("Failed to get anonymous ID from defaults: ${e.message}")
+                    Gateway.log("Failed to get anonymous ID from defaults: ${e.message}")
                     try {
                         NSUUID().UUIDString
                     } catch (uuidError: Exception) {
-                        Gateway.logger.error("Failed to generate UUID: ${uuidError.message}")
+                        Gateway.log("Failed to generate UUID: ${uuidError.message}")
                         "temp-${getTimeMillis()}"
                     }
                 }
             }
         } catch (e: Exception) {
-            Gateway.logger.error("Failed to get anonymous ID: ${e.message}")
+            Gateway.log("Failed to get anonymous ID: ${e.message}")
             try {
                 NSUUID().UUIDString
             } catch (uuidError: Exception) {
-                Gateway.logger.error("Failed to generate fallback UUID: ${uuidError.message}")
+                Gateway.log("Failed to generate fallback UUID: ${uuidError.message}")
                 "temp-${getTimeMillis()}"
             }
         }
@@ -230,35 +230,35 @@ internal class IOSFallbackGatewayImpl(
                 fallbackAnonId = try {
                     NSUUID().UUIDString
                 } catch (e: Exception) {
-                    Gateway.logger.error("Failed to generate UUID in fallback: ${e.message}")
+                    Gateway.log("Failed to generate UUID in fallback: ${e.message}")
                     "fallback-${getTimeMillis()}"
                 }
             }
-            Gateway.logger.warn("Using iOS fallback implementation - attestation features unavailable")
+            Gateway.log("Using iOS fallback implementation - attestation features unavailable")
         } catch (e: Exception) {
-            Gateway.logger.error("Error in iOS fallback warm up: ${e.message}")
+            Gateway.log("Error in iOS fallback warm up: ${e.message}")
         }
     }
 
     override suspend fun getIntegrityToken(): String {
-        Gateway.logger.warn("Integrity token unavailable in iOS fallback mode")
+        Gateway.log("Integrity token unavailable in iOS fallback mode")
         return ""
     }
 
     override suspend fun getAnonymousId(): String {
         return try {
             if (!enableAnonymousId) {
-                Gateway.logger.warn("Anonymous ID not enabled in config")
+                Gateway.log("Anonymous ID not enabled in config")
                 return ""
             }
             fallbackAnonId ?: try {
                 NSUUID().UUIDString.also { fallbackAnonId = it }
             } catch (e: Exception) {
-                Gateway.logger.error("Failed to generate UUID in fallback getAnonymousId: ${e.message}")
+                Gateway.log("Failed to generate UUID in fallback getAnonymousId: ${e.message}")
                 "fallback-${getTimeMillis()}".also { fallbackAnonId = it }
             }
         } catch (e: Exception) {
-            Gateway.logger.error("Error getting anonymous ID in iOS fallback mode: ${e.message}")
+            Gateway.log("Error getting anonymous ID in iOS fallback mode: ${e.message}")
             "fallback-${getTimeMillis()}"
         }
     }

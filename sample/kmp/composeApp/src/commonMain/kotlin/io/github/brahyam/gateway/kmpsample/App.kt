@@ -38,12 +38,14 @@ import com.aallam.openai.api.chat.ChatCompletionChunk
 import com.aallam.openai.api.chat.ChatCompletionRequest
 import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.core.Role
-import com.aallam.openai.api.image.ImageCreation
-import com.aallam.openai.api.image.ImageSize
+import com.aallam.openai.api.image.createGeminiImageGeneration
+import com.aallam.openai.api.image.getFirstImage
+import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.api.model.ModelId
+import com.aallam.openai.client.LoggingConfig
 import gateway_kmp.sample.kmp.composeApp.BuildConfig
 import io.github.brahyam.gateway.client.Gateway
-import io.github.brahyam.gateway.client.createOpenAIService
+import io.github.brahyam.gateway.client.createDirectGeminiService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -72,19 +74,23 @@ fun App() {
         val coroutineScope = remember { CoroutineScope(Dispatchers.Main) }
         val snackbarHostState = remember { SnackbarHostState() }
 
-        // Initialize OpenAIService once
-        val openAIService = remember {
+        // Initialize GeminiService once
+        val geminiService = remember {
             Gateway.configure(
                 googleCloudProjectNumber = BuildConfig.GOOGLE_CLOUD_PROJECT_NUMBER_STRING.toLong()
             )
             // Use to route requests through the Gateway service with protection against abuse
-            Gateway.createOpenAIService(
-                serviceURL = BuildConfig.GATEWAY_SERVICE_URL,
-                partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
-            )
+//            Gateway.createGeminiService(
+//                serviceURL = BuildConfig.GATEWAY_SERVICE_URL,
+//                partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
+//            )
 
-            // Use this to directly access OpenAI API (DONT USE IN PRODUCTION)
-//            Gateway.createDirectOpenAIService(apiKey = BuildConfig.OPENAI_API_KEY)
+            // Use this to directly access Gemini API (DONT USE IN PRODUCTION)
+            Gateway.createDirectGeminiService(
+                apiKey = BuildConfig.GEMINI_API_KEY, logging = LoggingConfig(
+                    LogLevel.All
+                )
+            )
         }
 
         Scaffold(
@@ -188,7 +194,7 @@ fun App() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    AIFunction.values().forEach { function ->
+                    AIFunction.entries.forEach { function ->
                         FilterChip(
                             onClick = { selectedFunction = function },
                             label = { Text(function.displayName) },
@@ -196,7 +202,7 @@ fun App() {
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -218,7 +224,7 @@ fun App() {
                                 input = ""
                                 isLoading = true
                                 streamingResponse = ""
-                                
+
                                 coroutineScope.launch {
                                     try {
                                         when (selectedFunction) {
@@ -238,7 +244,7 @@ fun App() {
                                                     messages = openAiMessages
                                                 )
                                                 val response =
-                                                    openAIService.chatCompletion(request).choices.first().message.content!!
+                                                    geminiService.chatCompletion(request).choices.first().message.content!!
                                                 messages = messages + ChatMessageUi(response, false)
                                             }
 
@@ -258,7 +264,7 @@ fun App() {
                                                     messages = openAiMessages
                                                 )
                                                 val completions: Flow<ChatCompletionChunk> =
-                                                    openAIService.chatCompletions(request)
+                                                    geminiService.chatCompletions(request)
                                                 var fullResponse = ""
 
                                                 completions.collect { chunk ->
@@ -277,16 +283,16 @@ fun App() {
                                             }
 
                                             AIFunction.IMAGE -> {
-                                                val imageCreation = ImageCreation(
-                                                    prompt = userInput,
-                                                    model = ModelId("gpt-image-1"),
-                                                    n = 1,
-                                                    size = ImageSize.is1024x1024,
-                                                    includeResponseFormat = false // only bc of gpt-image-1
+                                                val geminiImageGeneration =
+                                                    createGeminiImageGeneration(
+                                                        text = userInput,
+                                                        model = "gemini-2.5-flash-image-preview",
+                                                        responseModalities = listOf("TEXT", "IMAGE")
+                                                    )
+                                                val imageResponse = geminiService.generateImages(
+                                                    geminiImageGeneration
                                                 )
-                                                val imageResponse =
-                                                    openAIService.imageJSON(imageCreation)
-                                                val imageData = imageResponse.firstOrNull()?.b64JSON
+                                                val imageData = imageResponse.getFirstImage()?.data
                                                 if (imageData != null) {
                                                     val base64Image =
                                                         "data:image/png;base64,$imageData"
@@ -301,6 +307,7 @@ fun App() {
                                             }
                                         }
                                     } catch (e: Exception) {
+                                        println(e.message)
                                         snackbarHostState.showSnackbar("Error: ${e.message}")
                                     } finally {
                                         isLoading = false
