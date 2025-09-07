@@ -14,6 +14,7 @@ import com.aallam.openai.client.Files
 import com.aallam.openai.client.FineTunes
 import com.aallam.openai.client.FineTuning
 import com.aallam.openai.client.Gemini
+import com.aallam.openai.client.GeminiConfig
 import com.aallam.openai.client.GeminiHost
 import com.aallam.openai.client.GeminiImages
 import com.aallam.openai.client.LoggingConfig
@@ -28,6 +29,8 @@ import com.aallam.openai.client.Threads
 import com.aallam.openai.client.VectorStores
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.HttpSend
+import io.ktor.client.plugins.plugin
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -106,22 +109,22 @@ internal class GatewayGeminiService(
             if (baseUrlWithoutPath.endsWith("/")) baseUrlWithoutPath else "$baseUrlWithoutPath/"
         println("//// Creating protected Gemini client with host: $geminiHostUrl")
         Gemini(
-            apiKey = openAiConfig.token,
-            logging = openAiConfig.logging,
-            timeout = openAiConfig.timeout,
-            headers = buildMap {
-                putAll(openAiConfig.headers)
-                // Add Gateway headers directly to headers map
-                put("gateway-sdk-version", Gateway.VERSION)
-                put("gateway-device-type", getDeviceType())
-                put("gateway-provider", providerConfig.name)
-                // Add partial key as Authorization header like the protected service does
-                put("Authorization", "Bearer ${openAiConfig.token}")
-            },
-            proxy = openAiConfig.proxy,
-            retry = openAiConfig.retry,
-            host = GeminiHost(baseUrl = geminiHostUrl), // Use base URL without OpenAI compatible path
-            httpClientConfig = openAiConfig.httpClientConfig
+            config = GeminiConfig(
+                apiKey = openAiConfig.token,
+                logging = openAiConfig.logging,
+                timeout = openAiConfig.timeout,
+                headers = openAiConfig.headers,
+                host = GeminiHost(baseUrl = geminiHostUrl), // Use base URL without OpenAI compatible path
+                proxy = openAiConfig.proxy,
+                retry = openAiConfig.retry,
+                httpClientConfig = openAiConfig.httpClientConfig
+            ),
+            httpClientApplicator = {
+                plugin(HttpSend).intercept { request ->
+                    request.addGatewayHeaders(gatewayImpl, providerConfig, openAiConfig.token)
+                    execute(request)
+                }
+            }
         )
     }
 

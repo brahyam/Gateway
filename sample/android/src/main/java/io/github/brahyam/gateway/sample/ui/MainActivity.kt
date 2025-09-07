@@ -42,9 +42,12 @@ import com.aallam.openai.api.chat.ChatCompletionRequest
 import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.core.Role.Companion.Assistant
 import com.aallam.openai.api.core.Role.Companion.User
+import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.api.model.ModelId
+import com.aallam.openai.client.LoggingConfig
 import io.github.brahyam.gateway.client.ClaudeService
 import io.github.brahyam.gateway.client.Gateway
+import io.github.brahyam.gateway.client.createClaudeService
 import io.github.brahyam.gateway.client.createDirectClaudeService
 import io.github.brahyam.gateway.sample.BuildConfig
 import io.github.brahyam.gateway.sample.ui.theme.SampleTheme
@@ -62,15 +65,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Use this for BYOK (Bring Your Own Key) or during development
-        claudeService = Gateway.createDirectClaudeService(
-            apiKey = BuildConfig.CLAUDE_API_KEY // Replace with your Claude API key
-        )
+//        claudeService = Gateway.createDirectClaudeService(
+//            apiKey = BuildConfig.CLAUDE_API_KEY // Replace with your Claude API key
+//        )
 
         // Use this for production use cases with Gateway protection
-//        claudeAIService = Gateway.createClaudeService(
-//            partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
-//            serviceURL = BuildConfig.GATEWAY_SERVICE_URL
-//        )
+        claudeService = Gateway.createClaudeService(
+            partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
+            serviceURL = BuildConfig.GATEWAY_SERVICE_URL,
+            logging = LoggingConfig(logLevel = LogLevel.All)
+        )
 
         enableEdgeToEdge()
         setContent {
