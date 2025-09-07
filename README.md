@@ -7,6 +7,13 @@
 Android and Kotlin Multiplatform (KMP) client for accessing different AI providers (OpenAI,
 Claude...) directly or with API key protection through [Gateway's servers](https://meetgateway.com/)
 
+## ✨ What's New in v0.4.0
+
+- **Enhanced Gemini Support**: Advanced image generation and editing capabilities
+- **Nano Banana Integration**: Support for `gemini-2.5-flash-image-preview` model
+- **Multimodal Chat**: Process and generate both text and images in conversations
+- **Image Attachment**: Attach images to chat messages for context-aware responses
+
 ## 🚀 Supported Service Providers
 
 The `Gateway` client supports the following AI service providers (see [
@@ -30,7 +37,7 @@ For **KMP projects**, add to your **commonMain** dependencies in your shared mod
 
 ```kotlin
 commonMain.dependencies {
-    implementation("io.github.brahyam:gateway-client:0.3.0")
+    implementation("io.github.brahyam:gateway-client:0.4.0")
 }
 ```
 
@@ -38,7 +45,7 @@ For **Android-only projects**, add to your `build.gradle`:
 
 ```kotlin
 dependencies {
-   implementation("io.github.brahyam:gateway-client:0.3.0")
+   implementation("io.github.brahyam:gateway-client:0.4.0")
 }
 ```
 
@@ -117,8 +124,31 @@ val response = openAIService.chatCompletion(
 println(response.choices[0].message.content)
 ```
 
+### 5. Image Generation with Gemini (New in v0.4.0!)
+
+```kotlin
+// Initialize Gemini service with Gateway protection
+val geminiService = Gateway.createGeminiService(
+    serviceURL = "your-service-url",
+    partialKey = "your-partial-key",
+    logging = LoggingConfig(LogLevel.All)
+)
+
+// Generate images with text prompts and optional input images
+val geminiImageGeneration = createGeminiImageGenerationWithImages(
+    text = "Create a beautiful sunset landscape",
+    model = "gemini-2.5-flash-image-preview", // Nano banana model
+    images = existingImages, // Optional: for image editing
+    responseModalities = listOf("TEXT", "IMAGE")
+)
+
+val imageResponse = geminiService.generateImages(geminiImageGeneration)
+val generatedImage = imageResponse.getFirstImage()?.data
+```
+
 For a complete working example, check out the [sample/android](sample/android/)
-and [sample/kmp](sample/kmp/) folders.
+and [sample/kmp](sample/kmp/) folders. The KMP sample demonstrates the new image generation
+features!
 
 ---
 
