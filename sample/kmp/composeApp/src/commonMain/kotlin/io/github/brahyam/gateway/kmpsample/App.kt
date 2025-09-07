@@ -46,7 +46,9 @@ import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.core.Role
 import com.aallam.openai.api.image.createGeminiImageGenerationWithImages
 import com.aallam.openai.api.image.getFirstImage
+import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.api.model.ModelId
+import com.aallam.openai.client.LoggingConfig
 import gateway_kmp.sample.kmp.composeApp.BuildConfig
 import io.github.brahyam.gateway.client.Gateway
 import io.github.brahyam.gateway.client.createGeminiService
@@ -88,6 +90,9 @@ fun App() {
             Gateway.createGeminiService(
                 serviceURL = BuildConfig.GATEWAY_SERVICE_URL,
                 partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
+                logging = LoggingConfig(
+                    LogLevel.All
+                )
             )
 
             // Use this to directly access Gemini API (DONT USE IN PRODUCTION)

@@ -61,7 +61,8 @@ public fun Gateway.createDirectCustomService(
 ): CustomService {
     val customProvider = ServiceProviderConfig(
         name = "Custom",
-        proxyDomain = proxyDomain
+        baseUrl = proxyDomain,
+        openAiCompatiblePath = ""
     )
     return createDirectService(
         apiKey = apiKey,
@@ -108,7 +109,8 @@ public fun Gateway.createCustomService(
 ): CustomService {
     val customProvider = ServiceProviderConfig(
         name = "Custom",
-        proxyDomain = serviceURL
+        baseUrl = serviceURL,
+        openAiCompatiblePath = ""
     )
     return createProtectedService(
         partialKey = partialKey,

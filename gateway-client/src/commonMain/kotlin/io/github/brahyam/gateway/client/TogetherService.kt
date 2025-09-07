@@ -21,7 +21,8 @@ public interface TogetherService : OpenAI
 public object TogetherProvider {
     public val CONFIG: ServiceProviderConfig = ServiceProviderConfig(
         name = "Together AI",
-        proxyDomain = "api.together.xyz/v1"
+        baseUrl = "api.together.xyz",
+        openAiCompatiblePath = "/v1/"
     )
 }
 

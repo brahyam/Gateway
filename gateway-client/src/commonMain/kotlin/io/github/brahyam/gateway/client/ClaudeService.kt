@@ -21,7 +21,8 @@ public interface ClaudeService : OpenAI
 public object ClaudeProvider {
     public val CONFIG: ServiceProviderConfig = ServiceProviderConfig(
         name = "Anthropic Claude",
-        proxyDomain = "api.anthropic.com/v1"
+        baseUrl = "api.anthropic.com",
+        openAiCompatiblePath = "/v1/"
     )
 }
 

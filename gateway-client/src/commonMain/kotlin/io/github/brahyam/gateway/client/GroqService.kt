@@ -21,7 +21,8 @@ public interface GroqService : OpenAI
 public object GroqProvider {
     public val CONFIG: ServiceProviderConfig = ServiceProviderConfig(
         name = "Groq",
-        proxyDomain = "api.groq.com/openai/v1"
+        baseUrl = "api.groq.com",
+        openAiCompatiblePath = "/openai/v1/"
     )
 }
 

@@ -10,8 +10,8 @@ import io.ktor.client.plugins.plugin
  */
 public data class ServiceProviderConfig(
     val name: String,
-    val proxyDomain: String,
-    val apiPath: String = "/v1/",
+    val baseUrl: String,
+    val openAiCompatiblePath: String = "/v1/",
 )
 
 /**

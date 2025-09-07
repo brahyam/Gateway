@@ -22,7 +22,8 @@ public interface OpenAIService : OpenAI
 public object OpenAIProvider {
     public val CONFIG: ServiceProviderConfig = ServiceProviderConfig(
         name = "OpenAI",
-        proxyDomain = "api.openai.com/v1"
+        baseUrl = "api.openai.com",
+        openAiCompatiblePath = "/v1/"
     )
 }
 

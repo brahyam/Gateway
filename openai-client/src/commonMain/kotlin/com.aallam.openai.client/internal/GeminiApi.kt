@@ -13,10 +13,4 @@ import com.aallam.openai.client.internal.http.HttpRequester
 internal class GeminiApi(
     private val requester: HttpRequester,
     private val apiKey: String,
-) : Gemini, GeminiImages, AutoCloseable by requester {
-
-    override suspend fun generateImages(
-        generation: com.aallam.openai.api.image.GeminiImageGeneration,
-        requestOptions: com.aallam.openai.api.core.RequestOptions?,
-    ) = GeminiImagesApi(requester, apiKey).generateImages(generation, requestOptions)
-}
+) : Gemini, GeminiImages by GeminiImagesApi(requester, apiKey), AutoCloseable by requester

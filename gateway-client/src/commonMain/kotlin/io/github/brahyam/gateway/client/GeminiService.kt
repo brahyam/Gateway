@@ -14,6 +14,7 @@ import com.aallam.openai.client.Files
 import com.aallam.openai.client.FineTunes
 import com.aallam.openai.client.FineTuning
 import com.aallam.openai.client.Gemini
+import com.aallam.openai.client.GeminiHost
 import com.aallam.openai.client.GeminiImages
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.Messages
@@ -58,8 +59,8 @@ public interface GeminiService :
 public object GeminiProvider {
     public val CONFIG: ServiceProviderConfig = ServiceProviderConfig(
         name = "Google Gemini",
-        proxyDomain = "generativelanguage.googleapis.com/v1beta/openai",
-        apiPath = "/"
+        baseUrl = "generativelanguage.googleapis.com",
+        openAiCompatiblePath = "/v1beta/openai/"
     )
 }
 
@@ -97,13 +98,29 @@ internal class GatewayGeminiService(
 ) : BaseProtectedService(openAiConfig, gatewayImpl, GeminiProvider.CONFIG), GeminiService {
 
     private val geminiClient by lazy {
+        // Extract base URL without the OpenAI compatible path for Gemini image generation
+        val baseUrlWithoutPath =
+            openAiConfig.host.baseUrl.removeSuffix(providerConfig.openAiCompatiblePath)
+        // Ensure the URL ends with "/" so Gemini client appends paths correctly
+        val geminiHostUrl =
+            if (baseUrlWithoutPath.endsWith("/")) baseUrlWithoutPath else "$baseUrlWithoutPath/"
+        println("//// Creating protected Gemini client with host: $geminiHostUrl")
         Gemini(
             apiKey = openAiConfig.token,
             logging = openAiConfig.logging,
             timeout = openAiConfig.timeout,
-            headers = openAiConfig.headers,
+            headers = buildMap {
+                putAll(openAiConfig.headers)
+                // Add Gateway headers directly to headers map
+                put("gateway-sdk-version", Gateway.VERSION)
+                put("gateway-device-type", getDeviceType())
+                put("gateway-provider", providerConfig.name)
+                // Add partial key as Authorization header like the protected service does
+                put("Authorization", "Bearer ${openAiConfig.token}")
+            },
             proxy = openAiConfig.proxy,
             retry = openAiConfig.retry,
+            host = GeminiHost(baseUrl = geminiHostUrl), // Use base URL without OpenAI compatible path
             httpClientConfig = openAiConfig.httpClientConfig
         )
     }

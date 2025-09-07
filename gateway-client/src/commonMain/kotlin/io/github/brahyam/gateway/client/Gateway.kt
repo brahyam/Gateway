@@ -1,7 +1,6 @@
 package io.github.brahyam.gateway.client
 
 import com.aallam.openai.api.http.Timeout
-import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.api.logging.Logger
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAI
@@ -39,14 +38,12 @@ public object Gateway {
      *
      * @param googleCloudProjectNumber The Google Cloud Project Number (Android only, nullable for iOS)
      * @param enableAnonymousId Whether to enable anonymous ID support
-     * @param logger Optional logger implementation. If null, uses Logger.Simple.
-     * @param logLevel The minimum log level for logging (default: LogLevel.Info)
+     * @param logger Optional logger implementation. If null, uses Logger.Simple
      */
     public fun configure(
         googleCloudProjectNumber: Long,
         enableAnonymousId: Boolean = false,
         logger: Logger? = null,
-        logLevel: LogLevel = LogLevel.Info,
     ) {
         try {
             this.logger = logger ?: Logger.Simple
@@ -95,7 +92,7 @@ public object Gateway {
 
             val openAIConfig = OpenAIConfig(
                 token = apiKey,
-                host = OpenAIHost("https://${providerConfig.proxyDomain}/"),
+                host = OpenAIHost("https://${providerConfig.baseUrl}${providerConfig.openAiCompatiblePath}"),
                 logging = logging,
                 timeout = timeout,
                 organization = organization,
@@ -154,7 +151,7 @@ public object Gateway {
                 if (serviceURL.endsWith("/")) serviceURL.dropLast(1) else serviceURL
             val openAIConfig = OpenAIConfig(
                 token = partialKey,
-                host = OpenAIHost("${normalizedServiceURL}${providerConfig.apiPath}"),
+                host = OpenAIHost("${normalizedServiceURL}${providerConfig.openAiCompatiblePath}"),
                 engine = if (enableCertPinning) {
                     try {
                         createPinnedEngine()

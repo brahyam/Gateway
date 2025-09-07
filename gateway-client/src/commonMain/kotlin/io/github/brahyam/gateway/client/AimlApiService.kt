@@ -21,7 +21,8 @@ public interface AimlApiService : OpenAI
 public object AimlApiProvider {
     public val CONFIG: ServiceProviderConfig = ServiceProviderConfig(
         name = "AI/ML API",
-        proxyDomain = "api.aimlapi.com/v1"
+        baseUrl = "api.aimlapi.com",
+        openAiCompatiblePath = "/v1/"
     )
 }
 

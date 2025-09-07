@@ -46,5 +46,5 @@ internal object GeminiApiPath {
     /**
      * Generate the image generation endpoint path for a specific model.
      */
-    fun imageGeneration(model: String): String = "/v1beta/models/$model:generateContent"
+    fun imageGeneration(model: String): String = "v1beta/models/$model:generateContent"
 }

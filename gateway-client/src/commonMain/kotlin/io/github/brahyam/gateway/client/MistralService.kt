@@ -21,7 +21,8 @@ public interface MistralService : OpenAI
 public object MistralProvider {
     public val CONFIG: ServiceProviderConfig = ServiceProviderConfig(
         name = "Mistral AI",
-        proxyDomain = "api.mistral.ai/v1"
+        baseUrl = "api.mistral.ai",
+        openAiCompatiblePath = "/v1/"
     )
 }
 
