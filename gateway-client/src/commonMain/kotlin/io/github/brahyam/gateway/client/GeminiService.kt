@@ -1,6 +1,8 @@
 package io.github.brahyam.gateway.client
 
+import com.aallam.openai.api.core.RequestOptions
 import com.aallam.openai.api.http.Timeout
+import com.aallam.openai.api.image.GeminiImageGeneration
 import com.aallam.openai.client.Assistants
 import com.aallam.openai.client.Audio
 import com.aallam.openai.client.Batch
@@ -11,6 +13,7 @@ import com.aallam.openai.client.Embeddings
 import com.aallam.openai.client.Files
 import com.aallam.openai.client.FineTunes
 import com.aallam.openai.client.FineTuning
+import com.aallam.openai.client.Gemini
 import com.aallam.openai.client.GeminiImages
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.Messages
@@ -55,7 +58,8 @@ public interface GeminiService :
 public object GeminiProvider {
     public val CONFIG: ServiceProviderConfig = ServiceProviderConfig(
         name = "Google Gemini",
-        proxyDomain = "generativelanguage.googleapis.com/v1beta/openai"
+        proxyDomain = "generativelanguage.googleapis.com/v1beta/openai",
+        apiPath = "/"
     )
 }
 
@@ -67,7 +71,7 @@ internal class GatewayDirectGeminiService(
 ) : BaseDirectService(openAiConfig, GeminiProvider.CONFIG), GeminiService {
 
     private val geminiClient by lazy {
-        com.aallam.openai.client.Gemini(
+        Gemini(
             apiKey = openAiConfig.token,
             logging = openAiConfig.logging,
             timeout = openAiConfig.timeout,
@@ -79,8 +83,8 @@ internal class GatewayDirectGeminiService(
     }
 
     override suspend fun generateImages(
-        generation: com.aallam.openai.api.image.GeminiImageGeneration,
-        requestOptions: com.aallam.openai.api.core.RequestOptions?,
+        generation: GeminiImageGeneration,
+        requestOptions: RequestOptions?,
     ) = geminiClient.generateImages(generation, requestOptions)
 }
 
@@ -93,7 +97,7 @@ internal class GatewayGeminiService(
 ) : BaseProtectedService(openAiConfig, gatewayImpl, GeminiProvider.CONFIG), GeminiService {
 
     private val geminiClient by lazy {
-        com.aallam.openai.client.Gemini(
+        Gemini(
             apiKey = openAiConfig.token,
             logging = openAiConfig.logging,
             timeout = openAiConfig.timeout,
@@ -105,8 +109,8 @@ internal class GatewayGeminiService(
     }
 
     override suspend fun generateImages(
-        generation: com.aallam.openai.api.image.GeminiImageGeneration,
-        requestOptions: com.aallam.openai.api.core.RequestOptions?,
+        generation: GeminiImageGeneration,
+        requestOptions: RequestOptions?,
     ) = geminiClient.generateImages(generation, requestOptions)
 }
 

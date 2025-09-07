@@ -14,9 +14,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -38,14 +44,12 @@ import com.aallam.openai.api.chat.ChatCompletionChunk
 import com.aallam.openai.api.chat.ChatCompletionRequest
 import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.core.Role
-import com.aallam.openai.api.image.createGeminiImageGeneration
+import com.aallam.openai.api.image.createGeminiImageGenerationWithImages
 import com.aallam.openai.api.image.getFirstImage
-import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.api.model.ModelId
-import com.aallam.openai.client.LoggingConfig
 import gateway_kmp.sample.kmp.composeApp.BuildConfig
 import io.github.brahyam.gateway.client.Gateway
-import io.github.brahyam.gateway.client.createDirectGeminiService
+import io.github.brahyam.gateway.client.createGeminiService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -71,6 +75,7 @@ fun App() {
         var isLoading by remember { mutableStateOf(false) }
         var selectedFunction by remember { mutableStateOf(AIFunction.NORMAL) }
         var streamingResponse by remember { mutableStateOf("") }
+        var attachedImageUrl by remember { mutableStateOf<String?>(null) }
         val coroutineScope = remember { CoroutineScope(Dispatchers.Main) }
         val snackbarHostState = remember { SnackbarHostState() }
 
@@ -79,18 +84,18 @@ fun App() {
             Gateway.configure(
                 googleCloudProjectNumber = BuildConfig.GOOGLE_CLOUD_PROJECT_NUMBER_STRING.toLong()
             )
-            // Use to route requests through the Gateway service with protection against abuse
-//            Gateway.createGeminiService(
-//                serviceURL = BuildConfig.GATEWAY_SERVICE_URL,
-//                partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
-//            )
+//             Use to route requests through the Gateway service with protection against abuse
+            Gateway.createGeminiService(
+                serviceURL = BuildConfig.GATEWAY_SERVICE_URL,
+                partialKey = BuildConfig.GATEWAY_PARTIAL_KEY,
+            )
 
             // Use this to directly access Gemini API (DONT USE IN PRODUCTION)
-            Gateway.createDirectGeminiService(
-                apiKey = BuildConfig.GEMINI_API_KEY, logging = LoggingConfig(
-                    LogLevel.All
-                )
-            )
+//            Gateway.createDirectGeminiService(
+//                apiKey = BuildConfig.GEMINI_API_KEY, logging = LoggingConfig(
+//                    LogLevel.All
+//                )
+//            )
         }
 
         Scaffold(
@@ -133,14 +138,33 @@ fun App() {
                                     }
                                     msg.imageUrl?.let { imageUrl ->
                                         Spacer(modifier = Modifier.height(8.dp))
-                                        AsyncImage(
-                                            model = imageUrl,
-                                            contentDescription = msg.text,
-                                            modifier = Modifier
-                                                .size(200.dp)
-                                                .padding(4.dp),
-                                            contentScale = ContentScale.Crop
-                                        )
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            AsyncImage(
+                                                model = imageUrl,
+                                                contentDescription = msg.text,
+                                                modifier = Modifier
+                                                    .size(200.dp)
+                                                    .padding(4.dp),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                            if (!msg.isUser) {
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                IconButton(
+                                                    onClick = {
+                                                        attachedImageUrl = imageUrl
+                                                    },
+                                                    modifier = Modifier.size(32.dp)
+                                                ) {
+                                                    Icon(
+                                                        Icons.Default.Add,
+                                                        contentDescription = "Attach image",
+                                                        tint = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -204,6 +228,48 @@ fun App() {
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
+
+                // Show attached image thumbnail
+                attachedImageUrl?.let { imageUrl ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AsyncImage(
+                                model = imageUrl,
+                                contentDescription = "Attached image",
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .padding(4.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Image attached",
+                                modifier = Modifier.weight(1f),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            IconButton(
+                                onClick = {
+                                    attachedImageUrl = null
+                                },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Remove image",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
+                }
+                
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -220,8 +286,10 @@ fun App() {
                         onClick = {
                             if (input.isNotBlank() && !isLoading) {
                                 val userInput = input
-                                messages = messages + ChatMessageUi(userInput, true)
+                                val userImageUrl = attachedImageUrl
+                                messages = messages + ChatMessageUi(userInput, true, userImageUrl)
                                 input = ""
+                                attachedImageUrl = null
                                 isLoading = true
                                 streamingResponse = ""
 
@@ -239,7 +307,7 @@ fun App() {
                                                     content = userInput
                                                 )
                                                 val request = ChatCompletionRequest(
-                                                    model = ModelId("gpt-4o-mini"),
+                                                    model = ModelId("gemini-1.5-flash"),
                                                     n = 1,
                                                     messages = openAiMessages
                                                 )
@@ -259,7 +327,7 @@ fun App() {
                                                     content = userInput
                                                 )
                                                 val request = ChatCompletionRequest(
-                                                    model = ModelId("gpt-4o-mini"),
+                                                    model = ModelId("gemini-1.5-flash"),
                                                     n = 1,
                                                     messages = openAiMessages
                                                 )
@@ -284,9 +352,19 @@ fun App() {
 
                                             AIFunction.IMAGE -> {
                                                 val geminiImageGeneration =
-                                                    createGeminiImageGeneration(
+                                                    createGeminiImageGenerationWithImages(
                                                         text = userInput,
                                                         model = "gemini-2.5-flash-image-preview",
+                                                        images = userImageUrl?.let { imageUrl ->
+                                                            // Remove data:image/png;base64, prefix if present
+                                                            val base64Data =
+                                                                if (imageUrl.startsWith("data:image/png;base64,")) {
+                                                                    imageUrl.removePrefix("data:image/png;base64,")
+                                                                } else {
+                                                                    imageUrl
+                                                                }
+                                                            listOf(Pair("image/png", base64Data))
+                                                        } ?: emptyList(),
                                                         responseModalities = listOf("TEXT", "IMAGE")
                                                     )
                                                 val imageResponse = geminiService.generateImages(

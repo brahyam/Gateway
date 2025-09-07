@@ -154,7 +154,7 @@ public object Gateway {
                 if (serviceURL.endsWith("/")) serviceURL.dropLast(1) else serviceURL
             val openAIConfig = OpenAIConfig(
                 token = partialKey,
-                host = OpenAIHost("${normalizedServiceURL}/v1/"),
+                host = OpenAIHost("${normalizedServiceURL}${providerConfig.apiPath}"),
                 engine = if (enableCertPinning) {
                     try {
                         createPinnedEngine()
